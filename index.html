@@ -115,8 +115,11 @@
   #N_Box li { font-size: 19px; font-weight: 700; line-height: 1.45; padding-left: 30px; position: relative; }
   #N_Box li:before { content: "✕"; position: absolute; left: 4px; color: #ff6b81; font-weight: 900; }
   #N_Box li.Warn:before { content: "!"; color: #ffd54f; }
-  #N_Box .N_Row { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
-  #N_Never { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; color: var(--sub); background: none; border: none; padding: 8px 0; font-family: inherit; }
+  #N_Wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+  #N_Box .N_Row { display: flex; align-items: center; justify-content: center; margin-top: 22px; }
+  #N_Box li.Info:before { content: "i"; color: var(--neon); font-style: italic; font-family: Georgia, serif; }
+  #N_Box li.Info { color: var(--sub); }
+  #N_Never { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; color: #cfe3ff; background: none; border: none; padding: 8px 4px; font-family: inherit; }
   #N_Never i { width: 24px; height: 24px; border: 2px solid var(--sub); display: grid; place-items: center; font-style: normal; font-size: 18px; color: #041a4a; }
   #N_Never.On i { background: var(--neon); border-color: var(--neon); }
   #N_Never.On i:after { content: "✔"; }
@@ -637,6 +640,7 @@
 
   <!-- 안전 이용 안내 창 -->
   <div id="N_Dim">
+    <div id="N_Wrap">
     <div id="N_Box">
       <h2>안전 이용 안내</h2>
       <div class="N_Url"><small>니벨 뉴런 공식 주소 (이 주소 하나뿐)</small>nivel-neuron.github.io</div>
@@ -645,11 +649,13 @@
         <li><b>로그인·비밀번호·개인정보·결제</b>를 요구하지 않아요</li>
         <li>"니벨 뉴런 새 버전"이라며 받은 <b>다른 링크나 파일</b>은 열지 마세요</li>
         <li class="Warn">이런 요청이 보이면 아무것도 누르지 말고 창을 닫아 주세요</li>
+        <li class="Info">니벨 뉴런은 TCG 새틀라이트의 낙인 유저가 만들었어요</li>
       </ul>
       <div class="N_Row">
-        <button id="N_Never"><i></i>다시 보지 않기</button>
         <button id="N_Ok">확인</button>
       </div>
+    </div>
+    <button id="N_Never"><i></i>다시 보지 않기</button>
     </div>
   </div>
   <button id="Update_Bar">새 버전이 있어 · 눌러서 업데이트</button>
@@ -1006,7 +1012,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261124-0020";
+const APP_VERSION = "20261124-0030";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
