@@ -1,0 +1,2585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="니벨아레나 뉴런">
+<title>니벨아레나 뉴런</title>
+<style>
+  :root {
+    --bg1: #041a4a;
+    --bg2: #0a3a9e;
+    --neon: #4fe3ff;
+    --neon2: #1e8bff;
+    --text: #eaf6ff;
+    --sub: #8fb6e8;
+    --p1: #4fe3ff;
+    --p2: #ff7a8a;
+    --ok: #5dffb0;
+    --warn: #ffc94f;
+    --bad: #ff4d5e;
+    --glass: rgba(6, 30, 90, .45);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* 아이폰 홈 화면 앱에서 문서가 밀리지 않게 화면에 고정 */
+  html, body {
+    margin: 0; position: fixed; inset: 0; width: 100%; height: 100%; color: var(--text); overflow: hidden; overscroll-behavior: none;
+    font-family: -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif;
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    background: #041a4a;
+  }
+  #Bg {
+    position: fixed; inset: 0; z-index: 0;   /* 음수 z-index는 아이폰·아이패드에서 배경이 가려질 수 있어서 0으로 */
+    background:
+      linear-gradient(180deg, rgba(2, 12, 40, .45), rgba(2, 12, 40, .55)),
+      url("bg.jpg") center / cover no-repeat;
+  }
+  /* 노치·상태바를 피한 실제 사용 영역 */
+  #Stage {
+    position: fixed; z-index: 1;
+    top: env(safe-area-inset-top, 0px); bottom: env(safe-area-inset-bottom, 0px);
+    left: env(safe-area-inset-left, 0px); right: env(safe-area-inset-right, 0px);
+    overflow: hidden;
+  }
+  button { font-family: inherit; color: inherit; touch-action: manipulation; cursor: pointer; background: none; border: none; }
+
+  /* 화면 크기 맞춤: 작은 화면(폰)은 전체를 비율대로 축소해서 잘리지 않게 함 */
+  #App {
+    position: absolute; top: 0; left: 0; transform-origin: 0 0;
+    width: 100%; height: 100%; padding: 14px 22px 18px;
+    display: grid; grid-template-rows: auto 1fr; gap: 12px;
+  }
+
+  /* ---------- 홈 화면 ---------- */
+  #Home {
+    position: absolute; inset: 0; z-index: 10; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 56px;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 36, .72), rgba(2, 10, 36, .82)),
+      url("bg.jpg") center / cover no-repeat, #041a4a;
+  }
+  #Home.Show { display: flex; }
+  .Home_Title { text-align: center; }
+  .Home_Sub { font-size: 18px; letter-spacing: 10px; font-weight: 800; color: var(--neon); }
+  .Home_Title h1 {
+    margin: 6px 0 0; font-size: 64px; font-weight: 900; font-style: italic; letter-spacing: 2px;
+    text-shadow: 0 0 18px rgba(79,227,255,.6);
+  }
+  .Home_Menu { display: flex; gap: 32px; }
+  .Home_Card {
+    position: relative; width: 300px; height: 340px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: linear-gradient(180deg, rgba(29, 95, 208, .85), rgba(8, 36, 110, .9));
+    border: 2px solid var(--neon); box-shadow: 0 0 22px rgba(79,227,255,.35);
+    clip-path: polygon(10% 0, 90% 0, 100% 8%, 100% 92%, 90% 100%, 10% 100%, 0 92%, 0 8%);
+  }
+  .Home_Card:active { filter: brightness(1.4); }
+  .Home_Icon { line-height: 0; color: var(--neon); filter: drop-shadow(0 0 10px var(--neon)); }
+  .Home_Name { font-size: 34px; font-weight: 900; }
+  .Home_Desc { font-size: 16px; color: var(--sub); font-weight: 700; padding: 0 16px; text-align: center; }
+  .Soon {
+    position: absolute; top: 22px; right: 26px; font-size: 14px; font-weight: 900;
+    padding: 3px 10px; background: var(--warn); color: #2a1a00; border-radius: 4px;
+  }
+  #Toast {
+    position: absolute; left: 50%; top: 84px; transform: translateX(-50%); z-index: 20;
+    padding: 14px 28px; font-size: 20px; font-weight: 800; border-radius: 10px;
+    background: rgba(2, 10, 36, .92); border: 2px solid var(--neon);
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  #Toast.Show { opacity: 1; }
+  #Update_Bar {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 30; display: none;
+    padding: 14px 30px; font-size: 20px; font-weight: 900; color: #2a1a00;
+    background: linear-gradient(90deg, #ffe27a, #ff9f43); border: 2px solid #fff3c4; box-shadow: 0 0 20px rgba(255,180,70,.6);
+  }
+  #Update_Bar.Show { display: block; }
+
+
+  /* ================= 리미트 레귤레이션 ================= */
+  #LimitView {
+    position: absolute; inset: 0; z-index: 12; display: none; flex-direction: column; gap: 10px;
+    padding: 10px 22px 12px;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 36, .84), rgba(2, 10, 36, .9)),
+      url("bg.jpg") center / cover no-repeat, #041a4a;
+  }
+  #LimitView.Show { display: flex; }
+  .LV_Top { display: flex; align-items: center; gap: 18px; }
+  #LV_Home { gap: 4px; font-size: 16px; }
+  #LV_Home .Hex_Btn { width: 82px; height: 82px; }
+  #LV_Home .Hex_Btn svg { width: 36px; height: 36px; }
+  .LV_Title { font-size: 34px; font-weight: 900; font-style: italic; text-shadow: 0 0 14px rgba(79,227,255,.5); }
+  .LV_Date { margin-left: auto; padding: 10px 18px; font-size: 22px; font-weight: 900; border: 2px solid var(--neon); background: rgba(2,14,50,.75); }
+  .LV_Date small { color: var(--sub); font-size: 15px; margin-right: 8px; }
+  #LV_Body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; padding-bottom: 10px; }
+  .LV_Sec { border: 1px solid rgba(79,227,255,.35); flex-shrink: 0; }
+  .LV_Hd { width: 100%; display: flex; align-items: center; gap: 14px; height: 58px; padding: 0 20px; color: var(--text);
+    background: linear-gradient(90deg, #020a24 35%, var(--c)); border: none; border-bottom: 1px solid rgba(79,227,255,.35); font-family: inherit; }
+  .LV_Hd .Ar { color: var(--neon); font-size: 22px; font-weight: 900; transition: transform .2s; }
+  .LV_Sec.Fold .LV_Hd .Ar { transform: rotate(180deg); }
+  .LV_Sec.Fold .LV_Rows, .LV_Sec.Fold .LV_P { display: none; }
+  .LV_Hd .T { font-size: 24px; font-weight: 900; } .LV_Hd .T b { color: #ffd54f; }
+  .LV_Hd .N { margin-left: auto; font-size: 24px; font-weight: 900; }
+  .LV_Rows { display: grid; grid-template-columns: 1fr 1fr; }
+  .LV_Row { display: flex; align-items: center; gap: 14px; height: 60px; padding: 0 18px; background: rgba(12,52,136,.55);
+    border-bottom: 1px solid rgba(79,227,255,.25); border-right: 1px solid rgba(79,227,255,.15); }
+  .LV_Sq { width: 30px; height: 38px; border-radius: 3px; border: 2px solid rgba(255,255,255,.35); flex-shrink: 0; }
+  .LV_Id { font-size: 14px; color: var(--sub); font-weight: 800; width: 84px; flex-shrink: 0; }
+  .LV_Nm { font-size: 21px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .LV_Chg { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; flex-shrink: 0; }
+  .LV_Chg .O { padding: 4px 9px; border-radius: 4px; background: rgba(255,255,255,.14); color: #cfe3ff; border: 1px solid rgba(255,255,255,.3); }
+  .LV_Chg .A { color: #ffd54f; font-size: 13px; }
+  .LV_Chg .W { padding: 4px 10px; border-radius: 4px; }
+  .LV_Chg .Red { background: #d6223a; } .LV_Chg .Ora { background: #f08a2a; color: #2a1200; }
+  .LV_P { display: flex; align-items: center; border-bottom: 1px solid rgba(79,227,255,.25); }
+  .LV_P .PA, .LV_P .PB { flex: 1; min-width: 0; } .LV_P .LV_Row { border-right: none; }
+  .LV_X { width: 56px; text-align: center; font-size: 26px; font-weight: 900; color: #ff6b81; flex-shrink: 0; }
+  .LV_X.G { color: #5be3a0; }
+  .LV_Why { width: 230px; font-size: 16px; font-weight: 800; color: #5be3a0; padding: 0 14px; flex-shrink: 0; }
+  .LV_Rel .LV_Row { opacity: .85; }
+  .LV_Note { font-size: 16px; color: var(--sub); padding: 2px 4px; flex-shrink: 0; }
+  .NC .Lm { position: absolute; bottom: 38px; left: 3px; font-size: 10px; font-weight: 900; padding: 1px 4px; border-radius: 3px; }
+  .NC .Lm.Ban { background: #d6223a; } .NC .Lm.L1 { background: #f08a2a; color: #2a1200; } .NC .Lm.L2 { background: #d9a62a; color: #2a1a00; }
+  .NC.Bad { box-shadow: 0 0 0 3px #ff2d4a inset, 0 0 10px #ff2d4a; }
+  #D_Status.Bad { background: #8a1020; border-color: #ff6b81; color: #fff; }
+
+  /* ================= 덱 만들기 ================= */
+  #DeckView {
+    position: absolute; inset: 0; z-index: 12; display: none; flex-direction: column;
+    padding: 10px 22px 12px;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 36, .80), rgba(2, 10, 36, .88)),
+      url("bg.jpg") center / cover no-repeat, #041a4a;
+  }
+  #DeckView.Show { display: flex; }
+  .D_Top { display: flex; align-items: center; gap: 14px; }
+  #D_Home { gap: 4px; font-size: 16px; }
+  #D_Home .Hex_Btn { width: 82px; height: 82px; }
+  #D_Home .Hex_Btn svg { width: 36px; height: 36px; }
+  .D_Title { font-size: 13px; letter-spacing: 5px; color: var(--neon); font-weight: 800; }
+  #D_Name {
+    font-family: inherit; font-size: 24px; font-weight: 900; font-style: italic; color: var(--text);
+    background: transparent; border: none; border-bottom: 2px solid var(--neon); padding: 2px 8px; width: 300px; outline: none;
+  }
+  .D_Counts { margin-left: auto; display: flex; gap: 10px; }
+  .D_Pill { height: 60px; display: flex; align-items: center; padding: 0 18px; font-weight: 900; font-size: 22px; background: rgba(2,14,50,.75); border: 2px solid rgba(79,227,255,.5); white-space: nowrap; }
+  .D_Pill b { font-size: 30px; color: #fff; margin: 0 4px 0 8px; }
+  .D_Pill.Full b { color: var(--warn); }
+  #D_Status { height: 60px; display: flex; align-items: center; padding: 0 18px; font-weight: 900; font-size: 22px; border: 2px solid; white-space: nowrap; }
+  #D_Status.Ok { background: #1f9d6b; border-color: #5dffb0; color: #eafff4; }
+  #D_Status.No { background: rgba(2,14,50,.75); border-color: rgba(143,182,232,.5); color: var(--sub); }
+  .D_Btn {
+    height: 60px; padding: 0 34px; font-weight: 900; font-size: 22px;
+    background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+  }
+  .D_Btn:active, .D_Sub:active { filter: brightness(1.4); }
+  .D_Lab { font-size: 13px; letter-spacing: 3px; font-weight: 900; color: var(--sub); }
+  .D_Row1 { display: flex; gap: 16px; margin-top: 8px; align-items: stretch; }
+  .D_LeaderBox { width: 250px; display: flex; flex-direction: column; }   /* 트리거 박스와 같은 높이 */
+  #D_Leader {
+    flex: 1; position: relative; border: 3px dashed rgba(143,182,232,.5);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: var(--sub); font-weight: 800; font-size: 17px; background: rgba(2,14,50,.45);
+  }
+  #D_Leader.Has { border-style: solid; justify-content: flex-end; align-items: stretch; padding: 8px 10px; color: var(--text); }
+  #D_Leader .L_Lv { position: absolute; top: 0; right: 0; padding: 3px 10px; font-weight: 900; font-size: 14px; }
+  #D_Leader .L_Vow { position: absolute; top: 8px; left: 10px; right: 80px; font-size: 12px; font-weight: 700; line-height: 1.35; color: #ffe0e6; }
+  #D_Leader .L_Name { font-size: 20px; font-weight: 900; padding: 5px 8px; text-align: center; }
+  #D_Leader .L_Info { display: flex; justify-content: space-between; font-size: 11.5px; margin-top: 4px; opacity: .85; }
+  .D_TrigWrap { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+  .D_Trig {
+    background: rgba(255,255,255,.07); border: 1px solid rgba(79,227,255,.35); padding: 8px 12px 10px;
+    clip-path: polygon(0 0, 97% 0, 100% 12%, 100% 100%, 0 100%);
+  }
+  .D_TrigLab { display: inline-block; border: 2px solid var(--text); padding: 1px 12px; font-weight: 900; font-size: 16px; margin-bottom: 6px; clip-path: polygon(0 0, 88% 0, 100% 40%, 100% 100%, 0 100%); }
+  .D_TrigLab small { font-size: 14px; color: var(--warn); margin-left: 6px; }
+  #D_TrigRow { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; height: 118px; }
+  .D_MainHead { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+  #D_MainGrid { flex: 1; min-height: 0; margin-top: 6px; display: grid; grid-template-columns: repeat(11, 1fr); grid-auto-rows: 1fr; gap: 7px; }
+  .D_Bottom { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
+  .D_Sub { height: 76px; width: 230px; font-size: 26px; font-weight: 900; background: rgba(2,14,50,.85); border: 2px solid rgba(79,227,255,.6); }
+  .D_Add { height: 76px; width: 340px; font-size: 30px; font-weight: 900; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); box-shadow: 0 0 16px rgba(79,227,255,.45); }
+
+  /* 카드 타일 */
+  .NC { position: relative; border-radius: 5px; overflow: hidden; border: 2px solid; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; text-align: center; }
+  .NC .Co { position: absolute; top: 0; left: 0; min-width: 22px; height: 24px; padding: 0 4px; display: grid; place-items: center; font-weight: 900; font-size: 16px; }
+  .NC .Pw { position: absolute; top: 2px; right: 3px; font-size: 10px; font-weight: 800; background: rgba(0,0,0,.45); padding: 0 3px; }
+  .NC .Tr { position: absolute; top: 26px; left: 2px; font-size: 9px; font-weight: 900; background: var(--warn); color: #2a1a00; padding: 0 3px; border-radius: 2px; }
+  .NC .Nm { font-size: 10.5px; font-weight: 800; line-height: 1.2; padding: 4px 3px; min-height: 32px; display: grid; place-items: center; word-break: keep-all; }
+  .NC .Ct { position: absolute; bottom: 38px; right: 4px; font-size: 13px; font-weight: 900; background: rgba(0,0,0,.6); padding: 1px 6px; border-radius: 9px; }
+  .NC.Empty { border-color: rgba(79,227,255,.25); background: linear-gradient(150deg, #16051e, #2a0c3a 50%, #05122e); opacity: .45; justify-content: center; align-items: center; font-weight: 900; font-style: italic; font-size: 11px; color: #eaf6ff; }
+  .NC.Off { filter: grayscale(.8) brightness(.55); }
+  /* 카드 이미지 (cards 폴더) - 불러오면 글자 대신 이미지, 못 불러오면 글자 카드 그대로 */
+  .NC .Im { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; opacity: 0; pointer-events: none; }
+  .NC.HasImg { border-width: 1px; }
+  .NC.HasImg .Im { opacity: 1; }
+  .NC.HasImg .Co, .NC.HasImg .Pw, .NC.HasImg .Tr, .NC.HasImg .Nm { display: none; }
+  .NC.HasImg .Ct { bottom: 4px; }
+  .NC.HasImg .Lm { bottom: 4px; }
+  #D_Leader .L_Img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+  #D_Leader.HasImg .L_Img { opacity: 1; }
+  #D_Leader.HasImg .L_Name, #D_Leader.HasImg .L_Info, #D_Leader.HasImg .L_Lv { display: none; }
+  #D_Leader.HasImg .L_Vow { top: auto; bottom: 0; left: 0; right: 0; padding: 5px 8px; background: rgba(2,10,36,.82); color: #eaf6ff; z-index: 1; }
+  .a-화 { border-color: #ff8d9b; background: linear-gradient(170deg, #7a2236, #3a0d1a); }   .a-화 .Co, .a-화 .Nm, .L-화 .L_Name, .L-화 .L_Lv { background: #c8364a; }
+  .a-대 { border-color: #5dffb0; background: linear-gradient(170deg, #1c6b4e, #0b2f22); }   .a-대 .Co, .a-대 .Nm, .L-대 .L_Name, .L-대 .L_Lv { background: #1f9d6b; }
+  .a-폭 { border-color: #c79bff; background: linear-gradient(170deg, #4b2a7a, #1f0f3a); }   .a-폭 .Co, .a-폭 .Nm, .L-폭 .L_Name, .L-폭 .L_Lv { background: #7b46c8; }
+  .a-파 { border-color: #6fc8ff; background: linear-gradient(170deg, #1d4f8a, #0a1f3e); }   .a-파 .Co, .a-파 .Nm, .L-파 .L_Name, .L-파 .L_Lv { background: #2a72c8; }
+  .a-번 { border-color: #ffe27a; background: linear-gradient(170deg, #7a6216, #3a2c06); }   .a-번 .Co, .a-번 .Nm, .L-번 .L_Name, .L-번 .L_Lv { background: #b8901c; }
+  #D_Leader.L-화 { border-color: #ff8d9b; background: linear-gradient(160deg, #5a1424, #2a0a18 55%, #c8364a); }
+  #D_Leader.L-대 { border-color: #5dffb0; background: linear-gradient(160deg, #134a36, #08241a 55%, #1f9d6b); }
+  #D_Leader.L-폭 { border-color: #c79bff; background: linear-gradient(160deg, #351c5a, #160a2a 55%, #7b46c8); }
+  #D_Leader.L-파 { border-color: #6fc8ff; background: linear-gradient(160deg, #143a66, #08182e 55%, #2a72c8); }
+  #D_Leader.L-번 { border-color: #ffe27a; background: linear-gradient(160deg, #5a4810, #2a2006 55%, #b8901c); }
+
+  /* 카드 추가 창 */
+  #Picker {
+    position: absolute; inset: 0; z-index: 14; display: none; flex-direction: column; gap: 10px;
+    padding: 12px 22px; background: rgba(2, 8, 30, .96);
+  }
+  #Picker.Show { display: flex; }
+  .P_Top { display: flex; align-items: center; gap: 12px; }
+  #P_Search {
+    flex: 1; font-family: inherit; font-size: 20px; font-weight: 700; color: var(--text);
+    padding: 10px 16px; background: rgba(10, 40, 110, .6); border: 2px solid var(--neon); outline: none;
+  }
+  #P_Search::placeholder { color: var(--sub); }
+  .P_Body { flex: 1; min-height: 0; display: flex; gap: 14px; }
+  .P_Filters { width: 330px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 6px; }
+  .P_Group { background: rgba(10, 40, 110, .35); border: 1px solid rgba(79,227,255,.25); padding: 8px 10px; }
+  .P_GLab { font-size: 13px; font-weight: 900; color: var(--neon); letter-spacing: 1px; margin-bottom: 6px; }
+  .P_Chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .P_Chip { padding: 6px 10px; font-size: 14px; font-weight: 800; background: #0b2f86; border: 1px solid var(--neon2); color: var(--text); }
+  .P_Chip.On { background: var(--neon); color: #041a4a; border-color: var(--neon); }
+  .P_Right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .P_Info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: var(--sub); }
+  #P_Grid {
+    flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    display: grid; grid-template-columns: repeat(8, 1fr); grid-auto-rows: 128px; gap: 8px; align-content: start; padding-right: 4px;
+  }
+  #P_Grid .NC.Lead { grid-column: span 2; }
+  .NC.Lead .Im { object-position: 50% 50%; }   /* 리더는 가로 카드(기본면) 그대로 */
+  .P_Empty { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--sub); font-weight: 800; }
+
+  /* 덱 목록 · 확인창 */
+  .D_Layer { position: absolute; inset: 0; z-index: 16; display: none; align-items: center; justify-content: center; background: rgba(0, 6, 25, .72); }
+  .D_Layer.Show { display: flex; }
+  .D_Box {
+    width: min(640px, 90%); max-height: 86%; display: flex; flex-direction: column; gap: 12px; padding: 22px;
+    background: linear-gradient(180deg, #0c3488, #041a4a); border: 2px solid var(--neon); box-shadow: 0 0 30px rgba(79,227,255,.4);
+  }
+  .D_Box h2 { margin: 0; font-size: 22px; color: var(--neon); letter-spacing: 2px; }
+  .D_Box p { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.5; }
+  #DL_List { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .DL_Item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(2,14,50,.6); border: 1px solid rgba(79,227,255,.3); }
+  .DL_Item.Cur { border-color: var(--neon); box-shadow: inset 0 0 12px rgba(79,227,255,.35); }
+  .DL_Main { flex: 1; min-width: 0; }
+  .DL_Name { font-size: 18px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .DL_Meta { font-size: 13px; color: var(--sub); font-weight: 700; margin-top: 2px; }
+  .DL_Ok { color: var(--ok); }
+  .DL_Btn { padding: 8px 14px; font-size: 15px; font-weight: 900; background: #0b2f86; border: 1px solid var(--neon2); }
+  .DL_Btn.Red { background: linear-gradient(180deg, #c23a55, #5a1024); border-color: var(--p2); }
+  .D_Row { display: flex; gap: 10px; }
+  .D_Row button { flex: 1; height: 54px; font-size: 18px; font-weight: 900; background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2); }
+  .D_Row button.Red { background: linear-gradient(180deg, #c23a55, #5a1024); border-color: var(--p2); }
+
+  /* ---------- 상단 ---------- */
+  #Top_Bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .Hex_Btn {
+    width: 58px; height: 58px; display: grid; place-items: center;
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+    background: linear-gradient(180deg, #1b5fd6, #0a2c7a);
+    font-size: 22px; font-weight: 900; color: var(--neon);
+    box-shadow: inset 0 0 0 2px var(--neon);
+  }
+  .Hex_Btn:active { filter: brightness(1.4); }
+  #Timer_Box { text-align: center; }
+  #Timer_Box .Cap { font-size: 13px; letter-spacing: 4px; font-weight: 800; color: var(--neon); }
+  #Timer {
+    display: flex; align-items: center; gap: 16px; margin-top: 4px;
+    padding: 8px 26px; border: 2px solid var(--neon); border-radius: 6px;
+    background: rgba(2, 14, 50, .7); box-shadow: 0 0 18px rgba(79,227,255,.35);
+    clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
+  }
+  #Timer_Play { font-size: 22px; color: var(--neon); width: 34px; }
+  #Timer_Text { font-size: 40px; font-weight: 800; letter-spacing: 3px; font-variant-numeric: tabular-nums; text-shadow: 0 0 10px rgba(79,227,255,.6); }
+
+  /* ---------- 가운데 ---------- */
+  #Main { display: grid; grid-template-columns: 1fr 170px 1fr; grid-template-rows: 1fr auto; gap: 14px; min-height: 0; }
+  #Panel_p1 { grid-column: 1; grid-row: 1 / 3; }
+  #Panel_p2 { grid-column: 3; grid-row: 1 / 3; }
+  #Center_Col { grid-column: 2; grid-row: 1; }
+  #Bottom_Bar { grid-column: 2; grid-row: 2; }
+
+  .Player_Panel {
+    --accent: var(--p1);
+    position: relative; min-height: 0;
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--glass);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 2px solid rgba(79,227,255,.35);
+    box-shadow: inset 0 0 30px rgba(30,139,255,.25);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .Player_Panel.p1 { clip-path: polygon(0 0, 88% 0, 100% 14%, 100% 100%, 0 100%); }
+  .Player_Panel.p2 { --accent: var(--p2); clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%, 0 14%); }
+  .Player_Panel.Is_Turn { border-color: var(--accent); box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 20px var(--accent); }
+
+  .Panel_Head { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--text); padding-bottom: 6px; }
+  .p2 .Panel_Head { flex-direction: row-reverse; }
+  .Player_Name { font-size: 30px; font-weight: 900; letter-spacing: 1px; font-style: italic; }
+  .Turn_Mark { color: var(--accent); font-size: 22px; font-weight: 900; text-shadow: 0 0 10px var(--accent); }
+  .Player_Panel:not(.Is_Turn) .Turn_Mark { visibility: hidden; }
+  .Awake_Badge {
+    margin-left: auto; margin-right: 30px;   /* 패널 사선 모서리에 안 잘리게 안쪽으로 */
+    font-size: 26px; line-height: 1.2; font-weight: 900; padding: 2px 14px;
+    border: 2px solid var(--sub); color: var(--sub); border-radius: 6px;
+  }
+  .p2 .Awake_Badge { margin-left: 30px; margin-right: auto; }
+  .Awake_Badge.On { background: linear-gradient(90deg, #ffe27a, #ff9f43); color: #2a1a00; border-color: transparent; }
+
+  .Stat_Row { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 10px; flex: 2.4 1 0; min-height: 0; }
+  .Stat_Card {
+    background: rgba(2, 14, 50, .55); border: 1px solid rgba(79,227,255,.25);
+    padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 0;
+  }
+  .Stat_Label { font-size: 14px; letter-spacing: 2px; font-weight: 800; color: var(--sub); }
+  .Stat_Value { font-size: 82px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(79,227,255,.5); }
+  .Damage_Card .Stat_Value { font-size: 104px; color: var(--warn); text-shadow: 0 0 14px rgba(255,201,79,.5); }
+  .Damage_Card.Danger .Stat_Value { color: var(--bad); text-shadow: 0 0 16px rgba(255,77,94,.7); }
+  .Size_Card .Stat_Value { color: var(--ok); text-shadow: 0 0 14px rgba(93,255,176,.5); }
+  .Stat_Card:not(.Size_Card) .Stat_Sub { display: none; }   /* 레벨·대미지의 회색 안내 글씨 숨김 */
+  .Stat_Card { position: relative; }
+  .Stat_Value { flex: 1; display: flex; align-items: center; }   /* 세 칸 숫자 높이 맞춤 */
+  .Size_Card .Stat_Sub { position: absolute; left: 0; right: 0; bottom: 55px; text-align: center; font-size: 18px; }
+  .Stat_Sub { font-size: 12px; color: var(--sub); min-height: 15px; }
+  .Btn_Pair { display: flex; gap: 6px; width: 100%; }
+  .Btn_Pair button {
+    flex: 1; height: 110px; font-size: 48px; font-weight: 900;   /* 폰에서도 누르기 쉽게 크게 */
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86);
+    border: 1px solid var(--neon2);
+  }
+  .Btn_Pair button.Mod { font-size: 14px; white-space: nowrap; letter-spacing: -0.5px; }
+  .Btn_Pair button:active { filter: brightness(1.5); }
+
+  .Cost_Box { flex: 1 1 0; min-height: 0; background: rgba(2, 14, 50, .55); border: 1px solid rgba(79,227,255,.25); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .Cost_Top { display: flex; align-items: baseline; gap: 10px; }
+  .Cost_Text { font-size: 32px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .Cost_Left { margin-left: auto; font-size: 16px; color: var(--sub); font-weight: 800; }
+  .Cost_Left b { font-size: 32px; font-weight: 900; color: var(--text); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .Cost_Left.Over b { color: var(--bad); }
+  .Cost_Left.Zero b { color: #ff9f43; }   /* 여유 0 = 주황 */
+  .Cost_Left.Over { color: var(--bad); }
+  .Cost_Bar { height: 16px; background: #020a24; border: 1px solid rgba(79,227,255,.3); overflow: hidden; }
+  .Cost_Fill { height: 100%; width: 0; background: var(--ok); box-shadow: 0 0 10px var(--ok); transition: width .15s; }
+  .Cost_Fill.Full { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .Cost_Fill.Over { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+  .Cost_Controls { display: flex; gap: 6px; flex: 1; min-height: 0; }
+  .Cost_Controls button {
+    flex: 1; min-height: 48px; font-size: 48px; font-weight: 900;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2);
+  }
+  .Cost_Controls button:active { filter: brightness(1.5); }
+
+  .Result_Overlay {
+    position: absolute; inset: 0; display: none; z-index: 5;
+    align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+    background: rgba(2, 8, 30, .85);
+  }
+  .Result_Overlay.Show { display: flex; }
+  .Result_Overlay .Big { font-size: 72px; font-weight: 900; letter-spacing: 6px; font-style: italic; }
+  .Result_Overlay.Lose .Big { color: var(--bad); text-shadow: 0 0 20px var(--bad); }
+  .Result_Overlay.Win .Big { color: #ffe27a; text-shadow: 0 0 20px #ffb347; }
+  .Result_Overlay .Sub { font-size: 14px; color: var(--sub); }
+
+  /* 가운데 컨트롤 */
+  #Center_Col { display: flex; flex-direction: column; align-items: center; }
+  #Btn_Awake_Center { flex: 0 0 auto; margin-top: 0; }   /* 위치는 JS에서 각성 배지 높이에 맞춤 */
+  #Center_Btns { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+  .Tri_Btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; }
+  .Tri_Shape {
+    width: 96px; height: 84px; display: grid; place-items: center; font-size: 28px; font-weight: 900;
+    background: linear-gradient(180deg, #2a8bff, #0b3aa8);
+    filter: drop-shadow(0 0 8px rgba(79,227,255,.6));
+  }
+  .Tri_Down, .Tri_Up {
+    width: 92px; height: 80px; font-size: 32px; color: var(--neon);
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+    background: linear-gradient(180deg, #1b5fd6, #0a2c7a);
+    box-shadow: inset 0 0 0 2px var(--neon);
+  }
+  .Tri_Btn:active .Tri_Shape { filter: brightness(1.5) drop-shadow(0 0 12px var(--neon)); }
+  #Btn_Awake_Center {
+    width: 150px; height: 48px; font-size: 17px; font-weight: 900; letter-spacing: 1px;
+    background: linear-gradient(180deg, #1d6fe8, #0a2f8a);
+    border: 2px solid var(--neon); box-shadow: 0 0 16px rgba(79,227,255,.5);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+  }
+  #Btn_Awake_Center:active { filter: brightness(1.4); }
+
+  /* ---------- 하단 ---------- */
+  #Bottom_Bar { display: flex; justify-content: center; align-items: center; }
+  .Util_Btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .Util_Btn .Hex_Btn { width: 66px; height: 66px; font-size: 26px; }
+  .Util_Btn.Top_Util { gap: 4px; font-size: 16px; }
+  .Util_Btn.Top_Util .Hex_Btn { width: 82px; height: 82px; font-size: 32px; }   /* 덱 화면 홈 버튼과 같은 크기 */
+  .Util_Btn.Top_Util .Hex_Btn svg { width: 36px; height: 36px; }
+
+  /* ---------- 모달 ---------- */
+  .Modal_Back { position: fixed; inset: 0; background: rgba(0, 6, 25, .7); display: none; align-items: center; justify-content: center; z-index: 20; }
+  .Modal_Back.Show { display: flex; }
+  .Modal_Back .Modal { transform: scale(var(--app-scale, 1)); max-height: calc(85vh / var(--app-scale, 1)); flex-shrink: 0; }
+  .Modal {
+    background: linear-gradient(180deg, #0c3488, #041a4a); border: 2px solid var(--neon);
+    box-shadow: 0 0 30px rgba(79,227,255,.4);
+    padding: 24px; width: min(560px, 90vw); max-height: 85vh; display: flex; flex-direction: column; gap: 14px;
+  }
+  .Modal h2 { margin: 0; font-size: 22px; letter-spacing: 2px; color: var(--neon); }
+  .Modal p { margin: 0; color: var(--sub); font-size: 15px; line-height: 1.5; }
+  .Modal_Row { display: flex; gap: 10px; }
+  .Modal_Row button {
+    flex: 1; height: 56px; font-size: 17px; font-weight: 900;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2);
+  }
+  .Modal_Row .Pick_P2, .Modal_Row .Danger_Btn { background: linear-gradient(180deg, #c23a55, #5a1024); border-color: var(--p2); }
+  .Check_Row { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; padding: 6px 0; align-self: flex-start; }
+  .Check_Box { width: 28px; height: 28px; border: 3px solid var(--neon); background: transparent; }
+  .Check_Row.On .Check_Box { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+  .Awake_Set { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; }
+  .Awake_Set span { font-weight: 800; }
+  .Stepper { display: flex; align-items: center; gap: 12px; }
+  .Stepper button { width: 64px; height: 52px; font-size: 26px; font-weight: 900; background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2); }
+  .Stepper button:active { filter: brightness(1.5); }
+  .Stepper b { min-width: 70px; text-align: center; font-size: 30px; font-weight: 900; color: #ffd56b; }
+  #Log_List { overflow-y: auto; max-height: 50vh; line-height: 1.8; padding-right: 6px; }
+  #Log_List div { border-bottom: 1px solid #000; padding: 4px 0; display: flex; align-items: baseline; }
+  #Log_List .T { color: var(--sub); font-size: 19px; flex: 0 0 76px; font-variant-numeric: tabular-nums; }
+  #Log_List .L { font-size: 20px; font-weight: 800; }
+  #Dice_Result { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #D20 { position: relative; width: 170px; height: 170px; cursor: pointer; }
+  #D20 svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 0 10px rgba(79,227,255,.6)); }
+  #D20_Num {
+    position: absolute; inset: 0; display: grid; place-items: center; padding-top: 14px;
+    font-size: 52px; font-weight: 900; color: #fff; text-shadow: 0 0 12px var(--neon);
+    font-variant-numeric: tabular-nums;
+  }
+  #D20.Rolling { animation: D20_Spin .35s linear infinite; }
+  #D20.Landed { animation: D20_Pop .45s ease-out; }
+  #D20.Crit #D20_Num { color: #ffe27a; text-shadow: 0 0 18px #ffb347; }
+  #D20.Fumble #D20_Num { color: var(--bad); text-shadow: 0 0 18px var(--bad); }
+  @keyframes D20_Spin {
+    0%   { transform: rotate(0deg)   translate(0, 0)    scale(.92); }
+    25%  { transform: rotate(90deg)  translate(6px, -8px) scale(1); }
+    50%  { transform: rotate(180deg) translate(0, -2px) scale(.94); }
+    75%  { transform: rotate(270deg) translate(-6px, -8px) scale(1); }
+    100% { transform: rotate(360deg) translate(0, 0)    scale(.92); }
+  }
+  @keyframes D20_Pop {
+    0%   { transform: scale(1.35); }
+    60%  { transform: scale(.94); }
+    100% { transform: scale(1); }
+  }
+  #Coin_Result { font-size: 30px; font-weight: 900; min-height: 38px; color: var(--neon); text-shadow: 0 0 12px var(--neon); }
+
+  /* ---------- 가로 전용 ---------- */
+  #Rotate_Notice {
+    position: fixed; inset: 0; z-index: 50; background: #041a4a;
+    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+    font-size: 22px; font-weight: 800; text-align: center;
+  }
+  #Rotate_Notice small { color: var(--sub); font-size: 15px; font-weight: 600; }
+  @media (orientation: portrait) { #Rotate_Notice { display: flex; } }
+</style>
+</head>
+<body>
+
+<div id="Bg"></div>
+<div id="Stage">
+<div id="App">
+  <!-- 홈 화면: 듀얼 / 덱 만들기 / 리미트 레귤레이션 -->
+  <section id="Home" class="Show">
+    <div class="Home_Title">
+      <div class="Home_Sub">NIVEL ARENA</div>
+      <h1>니벨아레나 뉴런</h1>
+    </div>
+    <div class="Home_Menu">
+      <button class="Home_Card" id="Home_Duel">
+        <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10 44 44M44 44l8 2-2-8M54 10 20 44M20 44l-8 2 2-8M14 50l6-6M50 50l-6-6"/></svg></div>
+        <div class="Home_Name">듀얼</div>
+        <div class="Home_Desc">레벨 · 대미지 · 사이즈 계산</div>
+      </button>
+      <button class="Home_Card" id="Home_Deck">
+        <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="14" width="30" height="40" rx="4"/><path d="M12 20v32a4 4 0 0 0 4 4h24"/><path d="M33 26l4 8-4 8-4-8z"/></svg></div>
+        <div class="Home_Name">덱 만들기</div>
+        <div class="Home_Desc">리더 1장 + 40장 · 트리거 최대 8장</div>
+      </button>
+      <button class="Home_Card" id="Home_Limit">
+        <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="22"/><path d="M17 17l30 30"/></svg></div>
+        <div class="Home_Name">리미트 레귤레이션</div>
+        <div class="Home_Desc">금지 · 제한 카드 목록</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= 리미트 레귤레이션 화면 ================= -->
+  <section id="LimitView">
+    <div class="LV_Top">
+      <button class="Util_Btn Top_Util" id="LV_Home"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button>
+      <div class="LV_Title">리미트 레귤레이션</div>
+      <div class="LV_Date"><small>적용일</small><span id="LV_DateTxt"></span></div>
+    </div>
+    <div id="LV_Body"></div>
+  </section>
+
+  <!-- ================= 덱 만들기 화면 ================= -->
+  <section id="DeckView">
+    <div class="D_Top">
+      <button class="Util_Btn Top_Util" id="D_Home"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button>
+      <div class="D_Counts">
+        <div class="D_Pill" id="D_CntDeck">덱<b>0</b>/ 40</div>
+        <div class="D_Pill" id="D_CntTrig">트리거<b>0</b>/ 8</div>
+        <div id="D_Status" class="No">리더 없음</div>
+      </div>
+      <button class="D_Btn" id="D_Save">저장</button>
+    </div>
+
+    <div class="D_Row1">
+      <div class="D_LeaderBox">
+        <div id="D_Leader">리더를 눌러서 선택</div>
+      </div>
+      <div class="D_TrigWrap">
+        <div class="D_Trig">
+          <div class="D_TrigLab">트리거<small id="D_TrigSmall">0 / 8</small></div>
+          <div id="D_TrigRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="D_MainHead"><div class="D_Lab" id="D_MainLab">MAIN · 0장</div><div class="D_Lab" style="letter-spacing:1px">카드를 누르면 1장 빼기 · 코스트 순 정렬</div></div>
+    <div id="D_MainGrid"></div>
+
+    <div class="D_Bottom">
+      <button class="D_Sub" id="D_ListBtn">덱 목록</button>
+      <button class="D_Add" id="D_AddBtn">＋ 카드 추가</button>
+      <button class="D_Sub" id="D_ClearBtn">덱 초기화</button>
+    </div>
+
+    <!-- 카드 추가 창 -->
+    <div id="Picker">
+      <div class="P_Top">
+        <input id="P_Search" placeholder="카드 이름으로 검색" autocomplete="off">
+        <div class="D_Pill" id="P_CntDeck">덱<b>0</b>/ 40</div>
+        <div class="D_Pill" id="P_CntTrig">트리거<b>0</b>/ 8</div>
+        <button class="D_Btn" id="P_Close">완료</button>
+      </div>
+      <div class="P_Body">
+        <div class="P_Filters" id="P_Filters"></div>
+        <div class="P_Right">
+          <div class="P_Info"><span id="P_Count">0장</span><span>카드를 누르면 1장 추가 · 흐린 카드는 넣을 수 없는 카드</span></div>
+          <div id="P_Grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 덱 목록 -->
+    <div class="D_Layer" id="D_ListLayer">
+      <div class="D_Box">
+        <h2>덱 목록</h2>
+        <div id="DL_List"></div>
+        <div class="D_Row"><button id="DL_New">새 덱 만들기</button><button id="DL_Close">닫기</button></div>
+      </div>
+    </div>
+
+    <!-- 확인창 -->
+    <div class="D_Layer" id="D_Confirm">
+      <div class="D_Box">
+        <h2 id="DC_Title">확인</h2>
+        <p id="DC_Text"></p>
+        <div class="D_Row"><button id="DC_Yes">예</button><button class="Red" id="DC_No">아니오</button></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="Toast"></div>
+  <button id="Update_Bar">새 버전이 있어 · 눌러서 업데이트</button>
+  <div id="Top_Bar">
+    <div><button class="Util_Btn Top_Util" id="Btn_Home" aria-label="홈"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button></div>
+    <div id="Timer_Box">
+      <div class="Cap">DUEL TIME</div>
+      <div id="Timer"><button id="Timer_Play">▶</button><span id="Timer_Text">00:00:00</span></div>
+    </div>
+    <div style="justify-self:end"><button class="Util_Btn Top_Util" id="Btn_Log"><div class="Hex_Btn">☰</div>로그</button></div>
+  </div>
+
+  <div id="Main">
+    <section class="Player_Panel p1" id="Panel_p1"></section>
+
+    <div id="Center_Col">
+      <button id="Btn_Awake_Center">각성 레벨</button>
+      <div id="Center_Btns">
+        <button class="Tri_Btn" id="Btn_New"><div class="Tri_Shape Tri_Down">↻</div>초기화</button>
+        <button class="Tri_Btn" id="Btn_Undo"><div class="Tri_Shape Tri_Up">←</div>되돌리기</button>
+      </div>
+    </div>
+
+    <section class="Player_Panel p2" id="Panel_p2"></section>
+
+    <div id="Bottom_Bar">
+      <button class="Util_Btn" id="Btn_Dice"><div class="Hex_Btn">⚄</div>주사위 / 코인</button>
+    </div>
+  </div>
+</div>
+</div>  <!-- /Stage -->
+
+<!-- 초기화 시 로그 초기화 여부 -->
+<div class="Modal_Back" id="Modal_Reset_Log">
+  <div class="Modal">
+    <h2>초기화</h2>
+    <p style="font-size:19px;color:var(--text);font-weight:700">듀얼 로그를 초기화 하시겠습니까?</p>
+    <button class="Check_Row" id="Btn_Timer_Check"><span class="Check_Box"></span>타이머 초기화</button>
+    <div class="Modal_Row">
+      <button id="Btn_Log_Yes">예</button>
+      <button class="Danger_Btn" id="Btn_Log_No">아니오</button>
+    </div>
+  </div>
+</div>
+
+<!-- 각성 설정 -->
+<div class="Modal_Back" id="Modal_Awake">
+  <div class="Modal">
+    <h2 id="Awake_Title">각성 레벨</h2>
+    <p id="Awake_Desc">리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.</p>
+    <div class="Awake_Set">
+      <span style="color:var(--p1)">PLAYER 01</span>
+      <div class="Stepper"><button data-awake="p1" data-d="-1">−</button><b id="Awake_Val_p1">5</b><button data-awake="p1" data-d="1">+</button></div>
+      <span style="color:var(--p2)">PLAYER 02</span>
+      <div class="Stepper"><button data-awake="p2" data-d="-1">−</button><b id="Awake_Val_p2">5</b><button data-awake="p2" data-d="1">+</button></div>
+    </div>
+    <div class="Modal_Row"><button data-close id="Awake_Ok">닫기</button></div>
+  </div>
+</div>
+
+<!-- 로그 -->
+<div class="Modal_Back" id="Modal_Log">
+  <div class="Modal">
+    <h2>DUEL LOG</h2>
+    <div id="Log_List"></div>
+    <div class="Modal_Row"><button data-close>닫기</button></div>
+  </div>
+</div>
+
+<!-- 주사위/코인 -->
+<div class="Modal_Back" id="Modal_Dice">
+  <div class="Modal">
+    <h2>주사위 / 코인</h2>
+    <div id="Dice_Result">
+      <div id="D20">
+        <!-- 20면체 주사위를 정면에서 본 모양 -->
+        <svg viewBox="0 0 100 100">
+          <polygon points="50,3 91,26 91,74 50,97 9,74 9,26" fill="#0b2f86" stroke="#4fe3ff" stroke-width="2.5"/>
+          <polygon points="50,22 76,66 24,66" fill="#1d5fd0" stroke="#4fe3ff" stroke-width="1.8"/>
+          <g stroke="#4fe3ff" stroke-width="1.2" opacity=".7">
+            <line x1="50" y1="3"  x2="50" y2="22"/><line x1="9"  y1="26" x2="50" y2="22"/><line x1="91" y1="26" x2="50" y2="22"/>
+            <line x1="9"  y1="26" x2="24" y2="66"/><line x1="91" y1="26" x2="76" y2="66"/>
+            <line x1="9"  y1="74" x2="24" y2="66"/><line x1="91" y1="74" x2="76" y2="66"/>
+            <line x1="50" y1="97" x2="24" y2="66"/><line x1="50" y1="97" x2="76" y2="66"/>
+          </g>
+        </svg>
+        <div id="D20_Num">20</div>
+      </div>
+      <div id="Coin_Result"></div>
+    </div>
+    <div class="Modal_Row">
+      <button id="Btn_Roll">주사위 (1~20)</button>
+      <button id="Btn_Coin">코인 (앞/뒤)</button>
+    </div>
+    <div class="Modal_Row"><button data-close>닫기</button></div>
+  </div>
+</div>
+
+<div id="Rotate_Notice">
+  📱 가로 화면으로 돌려줘
+  <small>이 버전은 가로 전용이야</small>
+</div>
+
+<script>
+// ============================================================
+//  니벨아레나 뉴런
+//  룰 기준: 니벨아레나 종합 룰
+//   - 리더 레벨 1에서 시작, 매 턴 레벨업 페이즈에 +1, 최대 10
+//   - 사이즈 = 리더 레벨 + 대미지 존 카드 수 (+ 카드 효과 보정)
+//   - 필드(유닛 존 + 스킬 존) 코스트 합은 사이즈를 넘길 수 없음
+//   - 대미지 10 → 패배
+// ============================================================
+
+const MAX_LEVEL = 10;
+const LOSE_DAMAGE = 10;
+const SAVE_KEY = "Nivel_Counter_Landscape_Save";
+const NAMES = { p1: "PLAYER 01", p2: "PLAYER 02" };
+const SHORT = { p1: "P1", p2: "P2" };
+const LABEL = { level: "레벨", damage: "대미지", sizeMod: "사이즈 보정", fieldCost: "필드 코스트" };
+
+// ---------- 상태 ----------
+function Make_Player() {
+  return { level: 1, damage: 0, sizeMod: 0, fieldCost: 0, awakeLevel: 5 };
+}
+let state = { p1: Make_Player(), p2: Make_Player(), turnPlayer: null, turnCount: 0, log: [], timerMs: 0 };
+let history = [];
+
+// ---------- 계산 ----------
+function Get_Size(p) { return Math.max(0, p.level + p.damage + p.sizeMod); }
+function Get_Loser() {
+  if (state.p1.damage >= LOSE_DAMAGE) return "p1";
+  if (state.p2.damage >= LOSE_DAMAGE) return "p2";
+  return null;
+}
+function Other(id) { return id === "p1" ? "p2" : "p1"; }
+
+// ---------- 로그 ----------
+function Add_Log(text) {
+  const sec = Math.floor(state.timerMs / 1000);
+  const t = `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+  state.log.push({ t, text });   // 듀얼 타이머 기준 시각
+}
+
+// ---------- 되돌리기 ----------
+function Save_History() {
+  history.push(JSON.stringify(state));
+  if (history.length > 200) history.shift();
+}
+function Undo() {
+  if (history.length === 0) return;
+  const keepTimer = state.timerMs;
+  state = JSON.parse(history.pop());
+  state.timerMs = keepTimer;     // 타이머는 되돌리지 않음
+  Render_All();
+}
+
+// ---------- 동작 ----------
+function Change_Value(id, key, delta) {
+  const p = state[id];
+  let next = p[key] + delta;
+  if (key === "level") next = Math.min(MAX_LEVEL, Math.max(1, next));
+  if (key === "damage") next = Math.min(LOSE_DAMAGE, Math.max(0, next));
+  if (key === "fieldCost") next = Math.max(0, next);
+  if (next === p[key]) return;
+  Save_History();
+  p[key] = next;
+  Add_Log(`${SHORT[id]} ${LABEL[key]} ${delta > 0 ? "+" : "−"}${Math.abs(delta)} → ${next}`);
+  if (key === "level" && delta > 0 && next === p.awakeLevel) Add_Log(`${SHORT[id]} 리더 각성!`);
+  if (key === "damage" && next >= LOSE_DAMAGE) Add_Log(`${SHORT[id]} 대미지 10 — ${SHORT[Other(id)]} 승리`);
+  Render_All();
+}
+
+function Level_Up(id) {
+  const p = state[id];
+  if (p.level < MAX_LEVEL) p.level += 1;
+  Add_Log(`${SHORT[id]} 레벨업 페이즈 → Lv ${p.level}`);
+  if (p.level === p.awakeLevel) Add_Log(`${SHORT[id]} 리더 각성!`);
+}
+
+function Reset_Game(clearLog) {
+  // 초기화: 레벨 1, 대미지 0, 보정·필드 코스트 0. 선후공은 오프라인에서 수동으로.
+  Save_History();                       // 실수로 눌러도 되돌리기 가능
+  for (const id of ["p1", "p2"]) {
+    const awake = state[id].awakeLevel;
+    state[id] = Make_Player();
+    state[id].awakeLevel = awake;       // 각성 레벨 설정은 유지
+  }
+  state.turnPlayer = null;
+  state.turnCount = 0;
+  if (clearLog) state.log = [];    // "예": 듀얼 로그까지 비움
+  Add_Log("초기화");
+  Render_All();
+}
+
+// ---------- 타이머 ----------
+let timerRunning = false, timerStart = 0, timerBase = 0, timerLoop = null;
+function Timer_Toggle() { timerRunning ? Timer_Stop() : Timer_Start(); }
+function Timer_Start() {
+  timerRunning = true; timerBase = state.timerMs; timerStart = Date.now();
+  timerLoop = setInterval(() => { state.timerMs = timerBase + (Date.now() - timerStart); Render_Timer(); }, 250);
+  Render_Timer();
+}
+function Timer_Stop() {
+  timerRunning = false; clearInterval(timerLoop);
+  Render_Timer(); Save_State();
+}
+function Timer_Reset() { Timer_Stop(); state.timerMs = 0; Render_Timer(); Save_State(); }
+function Render_Timer() {
+  const s = Math.floor(state.timerMs / 1000);
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor(s / 60) % 60).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  document.getElementById("Timer_Text").textContent = `${hh}:${mm}:${ss}`;
+  document.getElementById("Timer_Play").textContent = timerRunning ? "❚❚" : "▶";
+}
+
+// ---------- 화면 ----------
+function Build_Panel(id) {
+  const el = document.getElementById("Panel_" + id);
+  el.innerHTML = `
+    <div class="Panel_Head">
+      <span class="Player_Name">${NAMES[id]}</span>
+      <span class="Awake_Badge" data-ref="awake">각성 Lv 5</span>
+    </div>
+    <div class="Stat_Row">
+      <div class="Stat_Card">
+        <div class="Stat_Label">LEVEL</div>
+        <div class="Stat_Value" data-ref="level">1</div>
+        <div class="Stat_Sub">최대 ${MAX_LEVEL}</div>
+        <div class="Btn_Pair"><button data-act="level" data-d="-1">−</button><button data-act="level" data-d="1">+</button></div>
+      </div>
+      <div class="Stat_Card Damage_Card" data-ref="damageCard">
+        <div class="Stat_Label">DAMAGE</div>
+        <div class="Stat_Value" data-ref="damage">0</div>
+        <div class="Stat_Sub" data-ref="damageSub">패배까지 10</div>
+        <div class="Btn_Pair"><button data-act="damage" data-d="-1">−</button><button data-act="damage" data-d="1">+</button></div>
+      </div>
+      <div class="Stat_Card Size_Card">
+        <div class="Stat_Label">SIZE</div>
+        <div class="Stat_Value" data-ref="size">1</div>
+        <div class="Stat_Sub" data-ref="sizeSub">레벨 + 대미지</div>
+        <div class="Btn_Pair" style="visibility:hidden"><button tabindex="-1">−</button></div>  <!-- 보정 버튼 삭제(오터치 방지), 칸 높이만 유지 -->
+      </div>
+    </div>
+    <div class="Cost_Box">
+      <div class="Cost_Top">
+        <span class="Stat_Label">FIELD COST</span>
+        <span class="Cost_Text" data-ref="costText">0 / 1</span>
+        <span class="Cost_Left" data-ref="costLeft">여유 1</span>
+      </div>
+      <div class="Cost_Bar"><div class="Cost_Fill" data-ref="costFill"></div></div>
+      <div class="Cost_Controls">
+        <button data-act="fieldCost" data-d="-1">−</button>
+        <button data-act="fieldCost" data-d="1">+</button>
+      </div>
+    </div>
+    <div class="Result_Overlay" data-ref="result">
+      <div class="Big" data-ref="resultBig"></div>
+      <div class="Sub">초기화로 다시 시작 / 되돌리기로 취소</div>
+    </div>
+  `;
+  el.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === "fieldReset") {
+      if (state[id].fieldCost !== 0) {
+        Save_History(); state[id].fieldCost = 0;
+        Add_Log(`${SHORT[id]} 필드 코스트 → 0`); Render_All();
+      }
+      return;
+    }
+    if (act) Change_Value(id, act, Number(btn.dataset.d));
+  });
+}
+
+function Ref(id, name) { return document.querySelector(`#Panel_${id} [data-ref="${name}"]`); }
+
+function Render_Panel(id) {
+  const p = state[id];
+  const size = Get_Size(p);
+
+  Ref(id, "level").textContent = p.level;
+  Ref(id, "damage").textContent = p.damage;
+  Ref(id, "damageSub").textContent = p.damage >= LOSE_DAMAGE ? "패배" : `패배까지 ${LOSE_DAMAGE - p.damage}`;
+  Ref(id, "damageCard").classList.toggle("Danger", p.damage >= 7);
+
+  Ref(id, "size").textContent = size;
+  Ref(id, "sizeSub").textContent = p.sizeMod === 0
+    ? `${p.level} + ${p.damage}`
+    : `${p.level} + ${p.damage} ${p.sizeMod > 0 ? "+" : "−"} ${Math.abs(p.sizeMod)}(보정)`;
+
+  const awake = Ref(id, "awake");
+  const isAwake = p.level >= p.awakeLevel;
+  awake.classList.toggle("On", isAwake);
+  awake.textContent = isAwake ? "★ 각성" : `각성 Lv ${p.awakeLevel}`;
+
+  const left = size - p.fieldCost;
+  Ref(id, "costText").textContent = `${p.fieldCost} / ${size}`;
+  const leftEl = Ref(id, "costLeft");
+  leftEl.innerHTML = left >= 0 ? `여유<b>${left}</b>` : `초과<b>${-left}</b>`;
+  leftEl.classList.toggle("Over", left < 0);
+  leftEl.classList.toggle("Zero", left === 0);
+  const fill = Ref(id, "costFill");
+  fill.style.width = size > 0 ? Math.min(100, p.fieldCost / size * 100) + "%" : (p.fieldCost > 0 ? "100%" : "0");
+  fill.classList.toggle("Full", left === 0 && p.fieldCost > 0);
+  fill.classList.toggle("Over", left < 0);
+
+  const loser = Get_Loser();
+  const result = Ref(id, "result");
+  result.classList.toggle("Show", !!loser);
+  result.classList.toggle("Lose", loser === id);
+  result.classList.toggle("Win", !!loser && loser !== id);
+  Ref(id, "resultBig").textContent = loser === id ? "LOSE" : "WIN";
+}
+
+function Render_Log() {
+  const list = document.getElementById("Log_List");
+  list.innerHTML = state.log.length
+    ? state.log.slice().reverse().map(l => `<div><span class="T">${l.t}</span><span class="L">${l.text}</span></div>`).join("")
+    : "<div><span class=\"L\">기록 없음</span></div>";
+}
+
+function Save_State() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function Render_All() {
+  Render_Panel("p1");
+  Render_Panel("p2");
+  document.getElementById("Awake_Val_p1").textContent = "Lv " + state.p1.awakeLevel;
+  document.getElementById("Awake_Val_p2").textContent = "Lv " + state.p2.awakeLevel;
+  Render_Timer();
+  Save_State();
+}
+
+// ---------- 모달 ----------
+function Show_Modal(id, show) { document.getElementById(id).classList.toggle("Show", show); }
+document.querySelectorAll("[data-close]").forEach(b =>
+  b.addEventListener("click", () => b.closest(".Modal_Back").classList.remove("Show")));
+
+
+// 각성 레벨 ± (1~10)
+function Change_Awake_Level(id, delta) {
+  const p = state[id];
+  const next = Math.min(MAX_LEVEL, Math.max(1, p.awakeLevel + delta));
+  if (next === p.awakeLevel) return;
+  p.awakeLevel = next;
+  Add_Log(`${SHORT[id]} 각성 레벨 → Lv ${next}`);
+  Render_All();
+}
+document.querySelectorAll("[data-awake]").forEach(btn =>
+  btn.addEventListener("click", () => Change_Awake_Level(btn.dataset.awake, Number(btn.dataset.d))));
+
+// ---------- 자동 업데이트 확인 ----------
+// 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
+const APP_VERSION = "20261123-2145";
+async function Check_Update() {
+  try {
+    if (location.protocol === "file:") return;
+    const text = await fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" }).then(r => r.text());
+    const m = text.match(/const APP_VERSION = "([^"]+)"/);
+    if (m && m[1] !== APP_VERSION) document.getElementById("Update_Bar").classList.add("Show");
+  } catch (e) {}
+}
+document.getElementById("Update_Bar").addEventListener("click", () => {
+  location.replace(location.pathname + "?v=" + Date.now());   // 저장된 예전 파일 대신 새로 받기
+});
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") Check_Update(); });
+window.addEventListener("pageshow", Check_Update);
+setTimeout(Check_Update, 1500);
+
+// ---------- 홈 화면 ----------
+function Show_Home(show) {
+  document.getElementById("Home").classList.toggle("Show", show);
+}
+function Show_Toast(text) {
+  const t = document.getElementById("Toast");
+  t.textContent = text;
+  t.classList.add("Show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("Show"), 1600);
+}
+document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
+document.getElementById("Home_Duel").addEventListener("click", () => {
+  Show_Home(false); Align_Awake_Button();
+  Open_Awake(true);   // 듀얼 들어갈 때 각성 레벨부터 설정
+});
+// 각성 레벨 창: 듀얼 시작 전이면 문구를 바꿔서 띄움
+function Open_Awake(beforeDuel) {
+  document.getElementById("Awake_Title").textContent = beforeDuel ? "듀얼 시작 전 각성 레벨 설정" : "각성 레벨";
+  document.getElementById("Awake_Desc").textContent = beforeDuel
+    ? "두 플레이어 리더의 각성 레벨을 먼저 맞춰줘."
+    : "리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.";
+  document.getElementById("Awake_Ok").textContent = beforeDuel ? "듀얼 시작" : "닫기";
+  Show_Modal("Modal_Awake", true);
+}
+document.getElementById("Home_Deck").addEventListener("click", () => { Show_Home(false); Show_Deck(true); });
+
+// ============================================================
+//  덱 만들기
+//  카드 데이터: 니벨아레나 공식 사이트 카드 검색 (레어도만 다른 같은 번호는 하나로 합침)
+//  형식: 번호|이름|종류|속성|코스트|파워|히트|트리거|IP|(리더) 각성Lv|서약종류|서약속성
+//   - 서약종류 O = "[색] 카드만 넣을 수 있다"
+//   - 서약종류 M = "[색] 카드를 넣어야 한다. [색] 이외의 카드는 모두 같은 속성"
+// ============================================================
+const CARD_DATA = `BT01-001|레드 후드|리|화||||0|0|6|O|화
+BT01-002|네온-블링 불렛|유|화|1|2000|1|0|0
+BT01-003|크로우|유|화|1|3000|1|0|0
+BT01-004|노이즈-클래식 디바|유|화|1|1500|1|0|0
+BT01-005|라피-클래식 바캉스|유|화|2|5000|1|0|0
+BT01-006|아니스 : 스파클링 서머|유|화|2|2500|1|1|0
+BT01-007|클레이|유|화|2|4000|1|0|0
+BT01-008|볼륨|유|화|3|4000|1|0|0
+BT01-009|베이|유|화|3|4500|1|0|0
+BT01-010|아리아|유|화|3|5000|1|0|0
+BT01-011|네온 : 블루 오션|유|화|4|4000|2|0|0
+BT01-012|엠마-달링 레드|유|화|4|5000|2|0|0
+BT01-013|자칼|유|화|4|5500|2|0|0
+BT01-014|홍련 : 흑영|유|화|4|7500|2|1|0
+BT01-015|누아르-흑묘|유|화|5|4500|2|0|0
+BT01-016|스노우 화이트 : 이노센트 데이즈|유|화|6|7000|2|0|0
+BT01-017|바이퍼-샤인 오브 러브|유|화|6|5000|2|0|0
+BT01-018|블랑-백묘|유|화|7|7000|3|0|0
+BT01-019|레드 후드|유|화|8|7000|3|1|0
+BT01-020|와일드 투스|스|화|1|||0|0
+BT01-021|포메이션 F.F|스|화|2|||0|0
+BT01-022|압도|스|화|3|||0|0
+BT01-023|치얼업 투게더|스|화|3|||0|0
+BT01-024|피날레|스|화|3|||0|0
+BT01-025|아군 합류|스|화|4|||0|0
+BT01-026|갓데시움 글러브|아|화|2|||1|0
+BT01-027|노른 코드 고글|아|화|3|||0|0
+BT01-028|홍련|리|대||||0|0|5|O|대
+BT01-029|벨로타|유|대|1|3000|1|0|0
+BT01-030|미카 : 스노우 버디|유|대|1|2000|1|0|0
+BT01-031|앤 : 미라클 페어리|유|대|1|3500|1|0|0
+BT01-032|신|유|대|2|4000|1|0|0
+BT01-033|도라-다크 로즈|유|대|2|2500|1|0|0
+BT01-034|길티-디스빌리프 웨이브|유|대|2|5500|1|1|0
+BT01-035|솔린|유|대|3|4500|1|0|0
+BT01-036|퀀시|유|대|3|3500|1|0|0
+BT01-037|디젤-미드나잇 스트로베리|유|대|3|4500|1|0|0
+BT01-038|루피|유|대|4|4000|2|0|0
+BT01-039|스노우 화이트-화이트 나이트|유|대|4|5000|2|0|0
+BT01-040|루피 : 윈터 쇼퍼|유|대|4|4000|2|0|0
+BT01-041|얀-선라이즈 마켓|유|대|5|6500|2|0|0
+BT01-042|나가|유|대|5|7500|2|0|0
+BT01-043|티아|유|대|6|8500|2|0|0
+BT01-044|라푼젤|유|대|6|8000|2|1|0
+BT01-045|브리드-블랙 문|유|대|7|7500|3|0|0
+BT01-046|홍련|유|대|8|8000|3|1|0
+BT01-047|순백의 의지|스|대|1|||0|0
+BT01-048|파란 나비의 꿈|스|대|2|||0|0
+BT01-049|디저트 타임|스|대|3|||0|0
+BT01-050|설온제|스|대|3|||0|0
+BT01-051|VIP 기프트|스|대|3|||1|0
+BT01-052|검신합일|스|대|4|||0|0
+BT01-053|갓데시움 프로텍터|아|대|2|||0|0
+BT01-054|아틀라스 패턴 건틀렛|아|대|4|||0|0
+BT01-055|신데렐라|리|폭||||0|0|5|O|폭
+BT01-056|에테르|유|폭|1|1500|1|0|0
+BT01-057|미하라|유|폭|1|2500|1|0|0
+BT01-058|메이든-시크릿 너스|유|폭|1|3500|1|0|0
+BT01-059|시그널|유|폭|2|3500|1|0|0
+BT01-060|애드미|유|폭|2|4500|1|0|0
+BT01-061|사쿠라 : 블룸 인 서머|유|폭|2|2000|1|0|0
+BT01-062|유니-러블리 핑크|유|폭|3|4500|1|0|0
+BT01-063|엑시아-게이머즈|유|폭|3|3000|1|0|0
+BT01-064|프리바티-연회의 공주|유|폭|3|3500|1|0|0
+BT01-065|율하|유|폭|4|6500|2|0|0
+BT01-066|노벨-펭귄 홈즈|유|폭|4|4000|2|0|0
+BT01-067|목단|유|폭|4|5000|2|0|0
+BT01-068|D : 킬러 와이프|유|폭|5|5000|2|0|0
+BT01-069|니힐리스타|유|폭|5|4500|2|0|0
+BT01-070|길로틴|유|폭|6|8500|2|0|0
+BT01-071|로산나 : 시크 오션|유|폭|6|7000|2|1|0
+BT01-072|모더니아-세컨드 어펙션|유|폭|7|7000|3|0|0
+BT01-073|신데렐라|유|폭|8|7500|3|1|0
+BT01-074|시크릿 코드|스|폭|2|||1|0
+BT01-075|버닝 샷|스|폭|2|||0|0
+BT01-076|마계흑룡파|스|폭|2|||0|0
+BT01-077|여긴 내가 맡는다!|스|폭|3|||0|0
+BT01-078|뷰티 풀 샷|스|폭|4|||1|0
+BT01-079|EX 매거진|스|폭|5|||0|0
+BT01-080|갓데시움 바이저|아|폭|2|||0|0
+BT01-081|티탄 매터 부츠|아|폭|3|||0|0
+BT02-001|볼륨-비트 더 건|유|화|1|2500|1|0|0
+BT02-002|엠마-오피스 테라피|유|화|3|4500|1|0|0
+BT02-003|레드 후드-넌센스 레드|유|화|3|2500|1|1|0
+BT02-004|루주|유|화|4|6000|2|0|0
+BT02-005|라푼젤 : 퓨어 그레이스|유|화|5|5500|2|0|0
+BT02-006|바이퍼-톡신 래빗|유|화|7|5500|3|0|0
+BT02-007|글레링 아이즈|스|화|3|||0|0
+BT02-008|더 게임 마스터|스|화|4|||0|0
+BT02-009|갓데시움 게이터|아|화|2|||1|0
+BT02-010|디젤-블랙 홀리데이|유|대|1|2500|1|0|0
+BT02-011|마르차나-스쿨 데이즈|유|대|3|6500|1|1|0
+BT02-012|루피-럭셔리 래빗|유|대|3|5500|1|1|0
+BT02-013|티아-러블리 데이트|유|대|4|5500|2|0|0
+BT02-014|퀀시 : 이스케이프 퀸|유|대|7|9500|3|0|0
+BT02-015|딸기향 이끌림|스|대|1|||0|0
+BT02-016|위대한 도둑|스|대|2|||0|0
+BT02-017|양호 선생님|스|대|3|||0|0
+BT02-018|아틀라스 패턴 헬멧|아|대|3|||0|0
+BT02-019|메이든 : 아이스 로즈|유|폭|1|1000|1|0|0
+BT02-020|길로틴 : 윈터 슬레이어|유|폭|3|4000|1|0|0
+BT02-021|모더니아-퍼스트 어펙션|유|폭|4|6500|2|0|0
+BT02-022|그레이브|유|폭|5|5000|2|1|0
+BT02-023|팬텀|유|폭|6|7500|2|0|0
+BT02-024|프리바티-거버먼트 노멀|유|폭|7|7000|3|0|0
+BT02-025|라이터즈 스포일러|스|폭|2|||1|0
+BT02-026|신세계|스|폭|3|||0|0
+BT02-027|매터 타입 : α 암가드|아|폭|1|||0|0
+BT02-028|헬름 : 아쿠아마린|리|파||||0|0|5|O|파
+BT02-029|네베|유|파|1|1500|1|0|0
+BT02-030|키리|유|파|2|3000|1|0|0
+BT02-031|에피넬|유|파|2|2500|1|0|0
+BT02-032|하란|유|파|2|2500|1|0|0
+BT02-033|폴크방|유|파|3|4500|1|0|0
+BT02-034|앵커|유|파|3|4000|1|0|0
+BT02-035|마스트-파이레츠 하트|유|파|3|1500|1|0|0
+BT02-036|앨리스 : 원더랜드 바니|유|파|3|4500|1|1|0
+BT02-037|츠바이|유|파|4|5500|2|0|0
+BT02-038|폴리|유|파|4|4000|2|0|0
+BT02-039|이사벨-허니문 파티|유|파|4|4000|2|0|0
+BT02-040|페퍼|유|파|5|5500|2|0|0
+BT02-041|도로시-노스텔지어|유|파|5|3500|2|1|0
+BT02-042|루드밀라 : 윈터 오너|유|파|5|1500|2|1|0
+BT02-043|루마니|유|파|6|7000|2|1|0
+BT02-044|아인|유|파|6|7500|2|0|0
+BT02-045|메어리 : 베이 갓데스|유|파|7|7500|3|0|0
+BT02-046|헬름 : 아쿠아마린|유|파|8|9000|3|1|0
+BT02-047|폴리스 라인|스|파|1|||0|0
+BT02-048|우리는 친구!|스|파|2|||0|0
+BT02-049|이지스 캐논 견제 사격|스|파|3|||0|0
+BT02-050|당근과 토끼 파티|스|파|3|||0|0
+BT02-051|해적의 안목|스|파|4|||0|0
+BT02-052|세라믹 베스트|아|파|0|||0|0
+BT02-053|갓데시움 자켓|아|파|1|||0|0
+BT02-054|노른 코드 글러브|아|파|2|||0|0
+BT02-055|크라운-네이키드 킹|리|번||||0|0|6|O|번
+BT02-056|트로니|유|번|1|1000|1|0|0
+BT02-057|슈가-콜 미 하드보일드|유|번|1|1500|1|1|0
+BT02-058|밀크|유|번|2|3000|1|0|0
+BT02-059|에이드|유|번|2|3500|1|0|0
+BT02-060|일레그|유|번|2|3000|1|0|0
+BT02-061|코코아|유|번|3|5000|1|0|0
+BT02-062|프림-씨 오브 슬로스|유|번|3|4000|1|0|0
+BT02-063|레오나|유|번|3|4000|1|1|0
+BT02-064|비스킷|유|번|4|6000|2|0|0
+BT02-065|라플라스|유|번|4|5000|2|0|0
+BT02-066|네로|유|번|4|5000|2|0|0
+BT02-067|크라운-네이키드 킹|유|번|4|6000|2|1|0
+BT02-068|리타-피쉬 가드|유|번|5|6500|2|0|0
+BT02-069|드레이크-빌런 레이서|유|번|5|5000|2|0|0
+BT02-070|센티-마이티 홀리데이|유|번|6|8000|2|0|0
+BT02-071|소다 : 트윙클링 바니|유|번|6|6000|2|1|0
+BT02-072|맥스웰-메카닉 화이트|유|번|7|8000|3|0|0
+BT02-073|용기있는 시선|스|번|1|||0|0
+BT02-074|식사 시간입니다, 주인님.|스|번|1|||1|0
+BT02-075|비기너즈 베네핏|스|번|2|||0|0
+BT02-076|로얄 에타이어|스|번|2|||0|0
+BT02-077|고양이 보은|스|번|3|||0|0
+BT02-078|세라믹 고글|아|번|0|||0|0
+BT02-079|갓데시움 부츠|아|번|1|||0|0
+BT02-080|아틀라스 패턴 프로텍터|아|번|2|||0|0
+BT02-081|패턴 시리즈 : 31 게이터|아|번|2|||0|0
+BT03-001|라피 : 레드 후드|리|화||||0|0|5|O|화
+BT03-002|바이퍼-샤인 오브 러브|유|화|1|1500|1|0|0
+BT03-003|홍련 : 흑영|유|화|2|2000|1|0|0
+BT03-004|아니스 : 스파클링 서머|유|화|2|2500|1|0|0
+BT03-005|라피-화이트 프로미스|유|화|3|3500|1|0|0
+BT03-006|홍련 : 흑영-연화|유|화|3|3500|1|0|0
+BT03-007|베스티-아크 메이지|유|화|4|4000|2|0|0
+BT03-008|노이즈-체리블로섬 스테이지|유|화|4|5000|2|0|0
+BT03-009|브래디|유|화|5|2500|2|1|0
+BT03-010|크러스트|유|화|6|4500|2|0|0
+BT03-011|라피 : 레드 후드|유|화|7|6000|3|1|0
+BT03-012|꽃구경하지 않겠는가.|스|화|1|||1|0
+BT03-013|뉴 플레이버|스|화|2|||0|0
+BT03-014|폭발은 예술이다.|스|화|2|||0|0
+BT03-015|계승되는 힘|스|화|4|||0|0
+BT03-016|티탄 매터 바이저|아|화|1|||0|0
+BT03-017|티탄 매터 베스트|아|화|2|||0|0
+BT03-018|나가-라스트 걸후드|리|대||||0|0|5|O|대
+BT03-019|루피 : 윈터 쇼퍼|유|대|1|2500|1|0|0
+BT03-020|트리나|유|대|2|3500|1|1|0
+BT03-021|티아|유|대|3|4000|1|0|0
+BT03-022|플로라|유|대|3|3000|1|0|0
+BT03-023|브리드-클래식 워커|유|대|4|4500|2|0|0
+BT03-024|홍련|유|대|4|4000|2|0|0
+BT03-025|디젤-스트로베리 플라워|유|대|5|5500|2|0|0
+BT03-026|율리아-마일드 녹턴|유|대|6|8500|2|0|0
+BT03-027|신-백스트리트 드림|유|대|6|7000|2|0|0
+BT03-028|나가-라스트 걸후드|유|대|9|10000|3|1|0
+BT03-029|브랜드 뉴 이어|스|대|2|||0|0
+BT03-030|최적의 경로|스|대|3|||0|0
+BT03-031|축제의 끝|스|대|3|||0|0
+BT03-032|시크릿 가든|스|대|5|||1|0
+BT03-033|레어 메탈 자켓|아|대|0|||0|0
+BT03-034|레어 메탈 고글|아|대|3|||0|0
+BT03-035|리틀 머메이드-어비스 플라워|리|폭||||0|0|5|O|폭
+BT03-036|로산나 : 시크 오션|유|폭|1|1000|1|0|0
+BT03-037|니힐리스타|유|폭|2|2000|1|0|0
+BT03-038|모더니아-퍼스트 어펙션|유|폭|2|2500|1|0|0
+BT03-039|신데렐라-유리 공주|유|폭|3|3000|1|0|0
+BT03-040|사쿠라-흑야암행|유|폭|4|5000|2|0|0
+BT03-041|미하라 : 본딩 체인|유|폭|4|5500|2|1|0
+BT03-042|마나|유|폭|5|5500|2|0|0
+BT03-043|메이든-언더 더 썬|유|폭|5|4500|2|0|0
+BT03-044|리틀 머메이드-어비스 플라워|유|폭|6|6000|2|1|0
+BT03-045|D : 킬러 와이프-시크릿 파티 클리너|유|폭|7|7000|3|0|0
+BT03-046|킬 더 로드|스|폭|2|||0|0
+BT03-047|M.M.R. 연구소|스|폭|2|||0|0
+BT03-048|궤도 엘리베이터|스|폭|2|||1|0
+BT03-049|본딩 페인|스|폭|3|||0|0
+BT03-050|갓데시움 베스트|아|폭|2|||0|0
+BT03-051|갓데시움 암가드|아|폭|3|||0|0
+BT03-052|마스트 : 로망틱 메이드|리|파||||0|0|6|O|파
+BT03-053|루드밀라 : 윈터 오너|유|파|1|2000|1|0|0
+BT03-054|앨리스 : 원더랜드 바니|유|파|2|2500|1|0|0
+BT03-055|메어리 : 베이 갓데스|유|파|2|2500|1|0|0
+BT03-056|하란-연회의 마녀|유|파|3|2000|1|0|0
+BT03-057|폴크방-모이스트 래빗|유|파|3|2500|1|1|0
+BT03-058|페퍼-오션 비타민|유|파|4|4000|2|0|0
+BT03-059|앵커 : 이노센트 메이드|유|파|4|3000|2|0|0
+BT03-060|헬름-애프터 샤워|유|파|5|4000|2|0|0
+BT03-061|마스트 : 로망틱 메이드|유|파|6|6000|2|1|0
+BT03-062|메어리-메디컬 래빗|유|파|7|5500|3|0|0
+BT03-063|다시 하면 돼!|스|파|3|||0|0
+BT03-064|로망틱 발렌타인|스|파|3|||1|0
+BT03-065|따뜻한 목욕|스|파|3|||0|0
+BT03-066|블루워터 아일랜드|스|파|5|||0|0
+BT03-067|갓데시움 건틀렛|아|파|2|||0|0
+BT03-068|갓데시움 고글|아|파|2|||0|0
+BT03-069|레비아탄|리|번||||0|0|6|O|번
+BT03-070|프리바티 : 언카인드 메이드|유|번|1|2000|1|0|0
+BT03-071|드레이크-메이드 포 빌런|유|번|2|3000|1|0|0
+BT03-072|크라운|유|번|2|2000|1|0|0
+BT03-073|소다 : 트윙클링 바니|유|번|3|4500|1|1|0
+BT03-074|트로니-스위트 스텝|유|번|3|3000|1|0|0
+BT03-075|슈엔|유|번|4|3500|2|0|0
+BT03-076|레오나-주 키퍼|유|번|4|5000|2|0|0
+BT03-077|레비아탄|유|번|5|5500|2|1|0
+BT03-078|슈가-와일드 백야드|유|번|6|6000|2|0|0
+BT03-079|베히모스|유|번|8|6500|3|0|0
+BT03-080|죽으면 안 돼.|스|번|1|||0|0
+BT03-081|거대한 집게|스|번|2|||1|0
+BT03-082|빨리 오라고오오!!!!!|스|번|2|||0|0
+BT03-083|코드 넘버 : IX 고글|아|번|2|||0|0
+BT03-084|코드 넘버 : IX 슈즈|아|번|2|||0|0
+BT03-085|코드 넘버 : IX 자켓|아|번|3|||0|0
+BT04-001|레테|리|화||||0|5|5|O|화
+BT04-002|조장 아룬카|리|화||||0|5|5|O|화
+BT04-003|아이테르 : 이제라의 작은 별|유|화|1|2000|1|0|5
+BT04-004|연구자 캐롯|유|화|1|1000|1|0|5
+BT04-005|프리다|유|화|1|2000|1|0|5
+BT04-006|한낮의 유영 플랑|유|화|1|2000|1|0|5
+BT04-007|남국의 이세리아|유|화|2|1500|1|0|5
+BT04-008|수호천사 몽모랑시 : 잔잔한 물결|유|화|2|2000|1|0|5
+BT04-009|여일의 디에리아 : 홍련의 투희|유|화|2|3000|1|0|5
+BT04-010|유진|유|화|2|2000|1|0|5
+BT04-011|폭격형 카논 : 특별한 선물|유|화|2|2500|1|0|5
+BT04-012|폴리티스 : 여우 신사의 무녀|유|화|2|2500|1|0|5
+BT04-013|방관자 화영|유|화|2|2000|1|0|5
+BT04-014|랑디|유|화|3|3000|1|0|5
+BT04-015|여름의 제자 알렉사|유|화|3|3000|1|0|5
+BT04-016|후계자 태유|유|화|3|2000|1|0|5
+BT04-017|로빈|유|화|3|3000|1|0|5
+BT04-018|전학생 아딘|유|화|3|2000|1|0|5
+BT04-019|축제의 에다|유|화|3|3000|1|0|5
+BT04-020|빅토리카|유|화|3|3000|1|0|5
+BT04-021|아람|유|화|3|4000|1|1|5
+BT04-022|풍기위원 아리아|유|화|3|2000|1|0|5
+BT04-023|세리스 : 푸른빛 진주|유|화|4|4000|2|0|5
+BT04-024|셀린 : 눈부신 여름|유|화|4|4000|2|0|5
+BT04-025|고독한 늑대 페이라|유|화|4|3000|2|1|5
+BT04-026|바다 향기 루루카|유|화|5|2500|2|0|5
+BT04-027|조장 아룬카|유|화|5|3000|2|1|5
+BT04-028|은빛 해일 화영|유|화|6|6000|2|1|5
+BT04-029|레테|유|화|8|6000|3|1|5
+BT04-030|단 하나의 위로|스|화|1|||0|5
+BT04-031|XII. The Hanged Man|스|화|1|||0|5
+BT04-032|매직 버블 메이커|스|화|2|||0|5
+BT04-033|함께한 우리의 계절|스|화|2|||0|5
+BT04-034|고독의 기도|스|화|3|||0|5
+BT04-035|불타는 뒷골목|스|화|3|||1|5
+BT04-036|적야의 선봉|스|화|3|||0|5
+BT04-037|약속된 영광|스|화|4|||0|5
+BT04-038|지옥파멸 정수 로브|아|화|1|||0|5
+BT04-039|지옥파멸 정수 신발|아|화|2|||0|5
+BT04-040|지옥파멸 정수 왕관|아|화|3|||0|5
+BT04-041|신월의 루나|리|폭||||0|5|6|O|폭
+BT04-042|용의 반려 셰나|리|폭||||0|5|5|O|폭
+BT04-043|전투형 마야|유|폭|1|3500|1|0|5
+BT04-044|죄악의 안젤리카 : 별의 예언|유|폭|1|500|1|0|5
+BT04-045|벨리안 : 손 끝의 선율|유|폭|1|1000|1|0|5
+BT04-046|엘비라|유|폭|1|500|1|0|5
+BT04-047|유피네|유|폭|1|4000|1|0|5
+BT04-048|달토끼 도미니엘|유|폭|2|2500|1|0|5
+BT04-049|라이아|유|폭|2|2000|1|0|5
+BT04-050|로앤나|유|폭|2|2000|1|0|5
+BT04-051|로제|유|폭|2|3000|1|0|5
+BT04-052|메르세데스 : 복슬복슬 레이디|유|폭|2|2000|1|0|5
+BT04-053|알렌시아 : 겨울 선물 할머니|유|폭|2|1000|1|0|5
+BT04-054|토라미|유|폭|2|2500|1|0|5
+BT04-055|화원의 리디카|유|폭|2|3000|1|0|5
+BT04-056|라스트 피스 카린|유|폭|3|3500|1|0|5
+BT04-057|모르트|유|폭|3|6000|1|0|5
+BT04-058|벨로나|유|폭|3|6500|1|0|5
+BT04-059|별의 신탁 엘레나|유|폭|3|3500|1|0|5
+BT04-060|설국의 솔리타리아|유|폭|3|2000|1|0|5
+BT04-061|페넬로페|유|폭|3|3500|1|0|5
+BT04-062|일편고월 벨로나|유|폭|3|3000|1|0|5
+BT04-063|세실리아 : 검은 날개의 몽마|유|폭|4|4000|2|0|5
+BT04-064|루나|유|폭|4|3000|2|0|5
+BT04-065|밤의 연회 릴리아스|유|폭|4|6000|2|0|5
+BT04-066|바다의 유령 폴리티스|유|폭|4|4500|2|0|5
+BT04-067|라비 : 내달리는 무지개|유|폭|4|2500|2|0|5
+BT04-068|심연의 유피네|유|폭|5|3000|2|0|5
+BT04-069|진혼의 로앤나|유|폭|5|5000|2|0|5
+BT04-070|용의 반려 셰나|유|폭|5|6000|2|1|5
+BT04-071|세릴라|유|폭|6|6000|2|0|5
+BT04-072|신월의 루나|유|폭|6|6000|2|1|5
+BT04-073|창공의 일리나브|유|폭|7|5500|3|1|5
+BT04-074|숲의 현자 비비안 : 라일락 향기|유|폭|7|4000|3|1|5
+BT04-075|호반의 마녀 테네브리아|유|폭|8|8000|3|0|5
+BT04-076|내면의 존재|스|폭|1|||1|5
+BT04-077|현혹의 날개|스|폭|2|||0|5
+BT04-078|유혹하는 꽃|스|폭|3|||0|5
+BT04-079|친구를 위한 마법|스|폭|3|||0|5
+BT04-080|신부의 결의|스|폭|3|||0|5
+BT04-081|유베리우스의 어금니|스|폭|4|||0|5
+BT04-082|데빌 드라이브|스|폭|13|||1|5
+BT04-083|심연의 칼날 목걸이|아|폭|2|||0|5
+BT04-084|자각룡의 홍옥|아|폭|3|||0|5
+BT05-001|훈련소장 카티야|리|화||||0|2|5|M|화
+BT05-002|스위트 데빌 레니|유|화|1|1000|1|0|2
+BT05-003|사격 교관 테오도르|유|화|2|2500|1|0|2
+BT05-004|발렌타인 로지|유|화|3|2000|1|0|2
+BT05-005|비터스윗 라우라|유|화|3|5000|1|1|2
+BT05-006|발렌타인 타지아|유|화|4|4500|2|0|2
+BT05-007|용 다이린|유|화|4|4500|2|0|2
+BT05-008|심연의 마왕 레녹스|유|화|4|4000|2|0|2
+BT05-009|멧현우|유|화|5|1000|2|0|2
+BT05-010|몽환의 악마 시셀라|유|화|6|3000|2|0|2
+BT05-011|훈련소장 카티야|유|화|9|7500|3|1|2
+BT05-012|모두 집중.|스|화|2|||0|2
+BT05-013|이 맛이지~|스|화|2|||0|2
+BT05-014|활약할 시간이야.|스|화|2|||0|2
+BT05-015|꽤 아플걸.|스|화|3|||0|2
+BT05-016|주작자문|아|화|0|||0|2
+BT05-017|현자총통|아|화|1|||0|2
+BT05-018|도깨비불에 이끌린 이안|유|대|1|2000|1|0|2
+BT05-019|운명의 푸른 가약 케네스|유|대|2|4000|1|0|2
+BT05-020|전학생 비앙카|유|대|3|2500|1|0|2
+BT05-021|방과 후 자유시간 데비&마를렌|유|대|5|6500|2|0|2
+BT05-022|2nd Anniversary 엘레나|유|대|5|6000|2|0|2
+BT05-023|1st Anniversary Blanc 헤이즈|유|대|6|5500|2|0|2
+BT05-024|운명의 붉은 가약 가넷|유|대|8|8000|3|1|2
+BT05-025|2nd Anniversary 이바 Blossom|유|대|9|7000|3|0|2
+BT05-026|우리 둘이니까.|스|대|1|||0|2
+BT05-027|즐거운 축제|스|대|1|||0|2
+BT05-028|불꽃놀이|스|대|3|||1|2
+BT05-029|쉬워도 너~무 쉬운데?|스|대|4|||0|2
+BT05-030|엔데버 AX|아|대|1|||0|2
+BT05-031|미스틸테인|아|대|2|||0|2
+BT05-032|언럭키 바니 니키|리|폭||||0|2|5|M|폭
+BT05-033|봄버 래빗 셀린|유|폭|1|1000|1|0|2
+BT05-034|고스트헌터 아이솔|유|폭|2|2500|1|0|2
+BT05-035|블레어|유|폭|3|1000|1|0|2
+BT05-036|고스트헌터 키아라|유|폭|4|4000|2|0|2
+BT05-037|포커페이스 바니 아비게일|유|폭|4|4000|2|0|2
+BT05-038|럭셔리 바니 제니|유|폭|5|5500|2|0|2
+BT05-039|퍼펙트 샷 바니 리오|유|폭|6|6500|2|0|2
+BT05-040|고스트헌터 재키|유|폭|7|8000|3|0|2
+BT05-041|언럭키 바니 니키|유|폭|7|7500|3|1|2
+BT05-042|깡총깡총|스|폭|1|||0|2
+BT05-043|당첨이야.|스|폭|2|||0|2
+BT05-044|토끼 등장이에요.|스|폭|2|||1|2
+BT05-045|구원의 손길|스|폭|3|||0|2
+BT05-046|마탄의 사수|아|폭|0|||0|2
+BT05-047|타나토스|아|폭|2|||0|2
+BT05-048|슈린|유|파|1|500|1|0|2
+BT05-049|눈꽃축제 시셀라|유|파|2|1500|1|0|2
+BT05-050|비치발리볼 니키|유|파|2|1000|1|0|2
+BT05-051|눈꽃축제 하트|유|파|4|2500|2|0|2
+BT05-052|해변의 점성술사 아디나|유|파|4|4000|2|0|2
+BT05-053|청랑일섬 츠바메|유|파|4|4000|2|1|2
+BT05-054|해변의 전사 마커스|유|파|5|7000|2|0|2
+BT05-055|해변의 인형사 클로에|유|파|5|5000|2|0|2
+BT05-056|바다의 화가 띠아|유|파|6|4500|2|0|2
+BT05-057|청랑일섬!|스|파|0|||1|2
+BT05-058|눈꽃축제|스|파|2|||0|2
+BT05-059|바다에서 하는 인형극|스|파|3|||0|2
+BT05-060|이제 안 참아!|스|파|3|||0|2
+BT05-061|빙백은침|아|파|1|||0|2
+BT05-062|알마스|아|파|2|||0|2
+BT05-063|사관후보생 아야|리|번||||0|2|5|M|번
+BT05-064|앙스텔|유|번|1|2500|1|0|2
+BT05-065|사관후보생 리 다이린|유|번|1|1000|1|1|2
+BT05-066|사관후보생 하트|유|번|2|3500|1|0|2
+BT05-067|사관후보생 아야|유|번|2|1000|1|1|2
+BT05-068|헨리|유|번|3|3000|1|0|2
+BT05-069|알렘|유|번|3|2500|1|0|2
+BT05-070|20년 전 마르티나|유|번|3|3000|1|0|2
+BT05-071|사관후보생 매그너스|유|번|4|4000|2|0|2
+BT05-072|사관후보생 재키|유|번|4|5000|2|0|2
+BT05-073|사관후보생 마이|유|번|5|5000|2|1|2
+BT05-074|히이익|스|번|0|||0|2
+BT05-075|으아아아!!!|스|번|1|||0|2
+BT05-076|마주친 순간!|스|번|2|||1|2
+BT05-077|첩보 요원|스|번|2|||0|2
+BT05-078|든든하네요.|스|번|3|||0|2
+BT05-079|알타이르|아|번|0|||0|2
+BT05-080|아스트라페|아|번|1|||0|2
+BT05-081|케르베로스|아|번|1|||0|2
+BT05-082|프리 버드|아|번|1|||0|2
+BT05-083|별 사냥꾼|아|번|2|||0|2
+BT05-084|악의|아|번|2|||0|2
+BT05-085|여의봉|아|번|2|||0|2
+BT05-086|이글 아이|아|번|2|||0|2
+BT06-001|와일드독 루벤시아|리|화||||0|3|6|O|화
+BT06-002|하얀 고양이 루|유|화|1|1500|1|0|3
+BT06-003|백뢰 유리|유|화|2|2500|1|0|3
+BT06-004|깜짝 유령 그란힐트|유|화|2|3000|1|0|3
+BT06-005|이노센트 바니 티르|유|화|2|2500|1|0|3
+BT06-006|와일드독 루벤시아|유|화|2|3000|1|1|3
+BT06-007|강철엔진 라피나|유|화|3|4500|1|0|3
+BT06-008|메이드네임 C 루비아|유|화|3|3000|1|0|3
+BT06-009|사랑스러운 아가씨 엘리제|유|화|3|4000|1|0|3
+BT06-010|허무의 별 그란힐트|유|화|3|6000|1|0|3
+BT06-011|쉐도우 바니 에레니르|유|화|3|3500|1|0|3
+BT06-012|밀키 비키니 테레제|유|화|3|3500|1|0|3
+BT06-013|네온 스토커 리아트리스|유|화|4|5000|2|0|3
+BT06-014|되찾은 운명 신성 유스티아|유|화|4|5000|2|0|3
+BT06-015|온천 관리인 리베르타|유|화|4|4000|2|0|3
+BT06-016|온천 수행자 벤타나|유|화|4|3500|2|0|3
+BT06-017|느슨한 라이프 가드 네브리스|유|화|4|4500|2|0|3
+BT06-018|꿰뚫는 마궁 에레니르|유|화|5|5000|2|0|3
+BT06-019|인감 탈취자 루벤시아|유|화|5|6000|2|0|3
+BT06-020|한여름의 꿈 유스티아|유|화|5|4500|2|0|3
+BT06-021|온천 검객 블레이드|유|화|5|4000|2|1|3
+BT06-022|비키니 에이전트 실비아|유|화|6|6000|2|0|3
+BT06-023|프로즌 퀸 빌헬미나|유|화|6|7500|2|0|3
+BT06-024|스트레인저 바니 제니스|유|화|7|8000|3|1|3
+BT06-025|비터스윗 바니 다리안|유|화|7|8000|3|1|3
+BT06-026|푸드 파이터|스|화|0|||0|3
+BT06-027|시크릿 서비스|스|화|1|||0|3
+BT06-028|여신의 수호|스|화|1|||0|3
+BT06-029|눈의 꽃|스|화|1|||1|3
+BT06-030|도깨비님의 가호랍니다~|스|화|2|||0|3
+BT06-031|온천은 정말 최고야!|스|화|2|||0|3
+BT06-032|데스 엔딩 러브|스|화|2|||0|3
+BT06-033|비키니 블래스터|스|화|2|||0|3
+BT06-034|신실의 검|스|화|3|||0|3
+BT06-035|피니쉬 블래스터|스|화|3|||0|3
+BT06-036|낙월일섬|스|화|3|||0|3
+BT06-037|얼어붙은 의지|스|화|3|||0|3
+BT06-038|가만두지 않겠어!|스|화|4|||0|3
+BT06-039|잿빛 폭풍|스|화|4|||0|3
+BT06-040|으, 음매...!|스|화|5|||0|3
+BT06-041|천둥의 망치|아|화|1|||0|3
+BT06-042|반역의 결의|아|화|2|||0|3
+BT06-043|꿈속의 신부 이클립스|리|파||||0|3|5|O|파
+BT06-044|물놀이 요정 레피테아|유|파|1|1000|1|0|3
+BT06-045|학교의 여왕 엠마|유|파|1|2000|1|0|3
+BT06-046|미지의 탐구자 디아나|유|파|1|1500|1|0|3
+BT06-047|네온 세이비어 안젤리카|유|파|2|2500|1|0|3
+BT06-048|신입 사원 세이르|유|파|2|4000|1|0|3
+BT06-049|정화의 무녀 그라나데|유|파|2|2500|1|0|3
+BT06-050|선도부 글레이시아|유|파|3|3500|1|0|3
+BT06-051|호박팔이 소녀 소냐|유|파|3|2000|1|0|3
+BT06-052|B급 아이돌 헬레나|유|파|3|2500|1|0|3
+BT06-053|대마녀의 후예 셀리아|유|파|3|3000|1|0|3
+BT06-054|풀 파티 세헤라자드|유|파|3|3000|1|0|3
+BT06-055|DJ 베나카|유|파|3|2000|1|0|3
+BT06-056|타락한 날개 올리비에|유|파|4|4000|2|0|3
+BT06-057|여름휴가 달비|유|파|4|3500|2|0|3
+BT06-058|오버히트 레비아|유|파|4|3000|2|0|3
+BT06-059|시기의 밤 레비아|유|파|5|6000|2|0|3
+BT06-060|신실의 날개 올리비에|유|파|5|4000|2|0|3
+BT06-061|해변의 정의 미카엘라|유|파|5|5500|2|1|3
+BT06-062|데이드림 바니 모르페아|유|파|6|5500|2|1|3
+BT06-063|꿈속의 신부 이클립스|유|파|7|5500|3|1|3
+BT06-064|셀레브리티 바니 로엔|유|파|8|8000|3|1|3
+BT06-065|물총놀이 시간!|스|파|1|||0|3
+BT06-066|스탠드 업, 뮤직 온!|스|파|1|||0|3
+BT06-067|엘리멘탈 리버스|스|파|1|||0|3
+BT06-068|요르문 리버스 모드|스|파|1|||0|3
+BT06-069|타르타로스의 문|스|파|1|||0|3
+BT06-070|비스트 오버드라이브|스|파|1|||0|3
+BT06-071|응원할게요!|스|파|2|||0|3
+BT06-072|고대의 저주|스|파|2|||0|3
+BT06-073|정화의 축복|스|파|3|||0|3
+BT06-074|킥킥, 타냐 등장!|스|파|3|||0|3
+BT06-075|한여름 난사|스|파|3|||0|3
+BT06-076|노출이 곧 정의입니다|스|파|3|||0|3
+BT06-077|멸악의 섬광|스|파|3|||0|3
+BT06-078|신실의 섬광|스|파|4|||0|3
+BT06-079|데이드림 콜|스|파|4|||0|3
+BT06-080|요력 폭풍|스|파|5|||0|3
+BT06-081|허니문 패키지|스|파|7|||0|3
+BT06-082|EMP 플래시|스|파|8|||1|3
+BT06-083|마수의 가호|아|파|1|||0|3
+BT06-084|사신의 수의|아|파|2|||0|3
+BT07-001|레이븐|리|대||||0|4|6|O|대
+BT07-002|브루트|유|대|1|1500|1|0|4
+BT07-003|아바돈|유|대|1|2000|1|0|4
+BT07-004|정체불명의 네이티브|유|대|1|2500|1|0|4
+BT07-005|엘더 네이티브|유|대|1|2000|1|0|4
+BT07-006|벨리알|유|대|2|4000|1|0|4
+BT07-007|레이븐-미드서머 앨리스|유|대|2|3000|1|0|4
+BT07-008|스토커|유|대|2|2000|1|0|4
+BT07-009|엘더 네이티브|유|대|2|2000|1|0|4
+BT07-010|저거너트|유|대|2|2000|1|0|4
+BT07-011|타키|유|대|2|4000|1|0|4
+BT07-012|기가스|유|대|3|3500|1|0|4
+BT07-013|벨리알|유|대|3|2500|1|0|4
+BT07-014|아바돈|유|대|3|3000|1|0|4
+BT07-015|레이븐|유|대|3|5000|1|0|4
+BT07-016|타키|유|대|3|4000|1|0|4
+BT07-017|데모고르곤|유|대|4|6500|2|0|4
+BT07-018|브루트|유|대|4|5000|2|0|4
+BT07-019|정체불명의 네이티브|유|대|4|4000|2|0|4
+BT07-020|레이븐-미드서머 앨리스|유|대|4|5500|2|0|4
+BT07-021|레이븐-사이버 트릭스터|유|대|4|4000|2|1|4
+BT07-022|타키|유|대|4|4000|2|0|4
+BT07-023|레이븐-미드서머 레드후드|유|대|4|6000|2|1|4
+BT07-024|레이븐-수국|유|대|4|4500|2|0|4
+BT07-025|레이븐-실버 쿠노이치|유|대|4|6000|2|0|4
+BT07-026|레이븐|유|대|5|5000|2|0|4
+BT07-027|레이븐-플래닛 다이브 슈트|유|대|5|6000|2|0|4
+BT07-028|타키|유|대|5|5000|2|0|4
+BT07-029|기가스|유|대|6|8500|2|0|4
+BT07-030|타키|유|대|6|5000|2|0|4
+BT07-031|레이븐-워 드레스|유|대|6|5000|2|1|4
+BT07-032|레이븐|유|대|7|3000|3|0|4
+BT07-033|레이븐-화이트 몬순|유|대|7|4000|3|0|4
+BT07-034|레이븐-적우|유|대|7|9000|3|1|4
+BT07-035|레이븐-로얄 가드 슈트|유|대|8|8000|3|1|4
+BT07-036|템페스트|스|대|0|||0|4
+BT07-037|공격 감지|스|대|1|||0|4
+BT07-038|쇼크웨이브|스|대|2|||0|4
+BT07-039|나는 들었다|스|대|2|||0|4
+BT07-040|자이온 지하에 잠든 진실|스|대|2|||0|4
+BT07-041|나는 보았다|스|대|3|||0|4
+BT07-042|푸른 칼날|스|대|3|||1|4
+BT07-043|그녀가 왔다|스|대|3|||0|4
+BT07-044|절망한 자의 애원|스|대|4|||0|4
+BT07-045|이브|리|번||||0|4|4|O|번
+BT07-046|엔야|유|번|1|2000|1|0|4
+BT07-047|이브-키홀 드레스|유|번|1|6000|1|0|4
+BT07-048|카야|유|번|1|2000|1|0|4
+BT07-049|카야|유|번|1|2500|1|0|4
+BT07-050|이브-뉴로링크 슈트|유|번|1|6000|1|1|4
+BT07-051|릴리|유|번|2|3500|1|0|4
+BT07-052|아담|유|번|2|3000|1|0|4
+BT07-053|엔야|유|번|2|3000|1|0|4
+BT07-054|릴리-사이버네틱 본디지|유|번|2|2500|1|0|4
+BT07-055|릴리|유|번|2|3000|1|0|4
+BT07-056|이브|유|번|2|6500|1|1|4
+BT07-057|타키|유|번|2|2000|1|0|4
+BT07-058|릴리-센세이트 스킨|유|번|2|2000|1|0|4
+BT07-059|이브-작약|유|번|2|6500|1|0|4
+BT07-060|아담|유|번|3|2500|1|0|4
+BT07-061|이브|유|번|3|7000|1|0|4
+BT07-062|이브-블랙 펄|유|번|3|7000|1|1|4
+BT07-063|이브|유|번|4|7500|2|0|4
+BT07-064|이브-뉴로서킷 본디지|유|번|4|7500|2|1|4
+BT07-065|이브-스킨 슈트|유|번|5|8000|2|0|4
+BT07-066|타키-화이트 펄|유|번|5|2500|2|0|4
+BT07-067|이브-웨이브 오블리크 모노키니|유|번|5|8000|2|1|4
+BT07-068|이브-뉴로링크 슈트|유|번|6|8500|2|0|4
+BT07-069|이브-스킨 슈트|유|번|6|8500|2|1|4
+BT07-070|이브-익스트림 버니|유|번|7|9000|3|0|4
+BT07-071|타키-타이달 메이드|유|번|7|10000|3|0|4
+BT07-072|이브-오션 스트링|유|번|8|9500|3|1|4
+BT07-073|이브-키홀 드레스|유|번|9|10000|3|1|4
+BT07-074|카운터 체인|스|번|0|||0|4
+BT07-075|지금! 몰아붙이자!|스|번|2|||0|4
+BT07-076|천국으로의 티켓|스|번|2|||0|4
+BT07-077|요람의 진실|스|번|3|||0|4
+BT07-078|침묵의 거리|스|번|3|||0|4
+BT07-079|임팩트-타입 엑소스파인|스|번|4|||0|4
+BT07-080|크라이오 오리지널|아|번|0|||0|4
+BT07-081|베히모스 레드|아|번|1|||0|4
+BT07-082|스마트 마인|아|번|1|||0|4
+BT07-083|지속형 회복제|아|번|1|||0|4
+BT07-084|픽시|아|번|1|||0|4
+BT07-085|산탄|아|번|2|||0|4
+BT07-086|스팅어 미사일|아|번|2|||0|4
+BT07-087|음파 수류탄|아|번|2|||0|4
+BT07-088|작렬탄|아|번|2|||0|4
+BT08-001|아니스 : 스타 - 스타라이트|리|화||||0|0|5|O|화
+BT08-002|홍련 : 흑영 - 연화|유|화|1|4000|1|0|0
+BT08-003|민트|유|화|1|2500|1|0|0
+BT08-004|누아르 - 흑묘|유|화|2|4000|1|0|0
+BT08-005|루주 - 언럭키 래빗|유|화|2|5000|1|0|0
+BT08-006|프리카|유|화|2|4000|1|0|0
+BT08-007|라피 : 레드 후드 - 샤인 라이트|유|화|2|5000|1|1|0
+BT08-008|바이퍼 - 톡신 래빗|유|화|3|5500|1|0|0
+BT08-009|네온 : 비전 아이|유|화|4|1000|2|0|0
+BT08-010|스노우 화이트 : 헤비암즈|유|화|4|4000|2|0|0
+BT08-011|아니스 : 스타 - 스타라이트|유|화|5|5500|2|1|0
+BT08-012|초화력|스|화|1|||0|0
+BT08-013|스타 아니스|스|화|2|||0|0
+BT08-014|세븐스 드워프 풀 액티브|스|화|2|||0|0
+BT08-015|TRACING THE STARS|스|화|2|||0|0
+BT08-016|노른 코드 슈즈|아|화|1|||0|0
+BT08-017|티탄 매터 암가드|아|화|2|||0|0
+BT08-018|마르차나 : 마린 스터디|리|대||||0|0|5|O|대
+BT08-019|플로라|유|대|1|2000|1|0|0
+BT08-020|루피 - 럭셔리 래빗|유|대|2|3000|1|0|0
+BT08-021|퀀시 : 이스케이프 퀸|유|대|2|4500|1|0|0
+BT08-022|길티 - 디스빌리프 웨이브|유|대|3|4000|1|0|0
+BT08-023|트리나|유|대|3|4500|1|0|0
+BT08-024|브리드 : 사일런트 트랙|유|대|3|4500|1|0|0
+BT08-025|소라 - 스프링 플라이트|유|대|3|4000|1|0|0
+BT08-026|티아 - 씨 리지|유|대|4|5500|2|0|0
+BT08-027|마르차나 : 마린 스터디|유|대|4|6000|2|1|0
+BT08-028|나가 - 링 앙상블|유|대|5|7500|2|1|0
+BT08-029|나유타 - 무위|유|대|7|8500|3|0|0
+BT08-030|고행|스|대|2|||0|0
+BT08-031|졸업 여행|스|대|2|||0|0
+BT08-032|펭군 스파이럴|스|대|3|||0|0
+BT08-033|레어 메탈 프로텍터|아|대|0|||0|0
+BT08-034|아틀라스 패턴 게이터|아|대|2|||0|0
+BT08-035|리버렐리오 - 드리밍 레이크|리|폭||||0|0|4|O|폭
+BT08-036|아르카나 : 포츈 메이트|유|폭|1|4500|1|0|0
+BT08-037|D : 킬러 와이프|유|폭|2|4500|1|0|0
+BT08-038|사쿠라 : 블룸 인 서머|유|폭|3|5500|1|0|0
+BT08-039|목단 - 화중지왕|유|폭|3|4500|1|0|0
+BT08-040|리틀 머메이드 - 쉘 프린세스|유|폭|3|3000|1|0|0
+BT08-041|메이든 : 아이스 로즈|유|폭|4|6500|2|0|0
+BT08-042|리버렐리오 - 드리밍 레이크|유|폭|4|5000|2|1|0
+BT08-043|모더니아 - 퍼스트 어펙션|유|폭|5|6000|2|0|0
+BT08-044|프리바티 - 샤프 레슨|유|폭|5|7000|2|0|0
+BT08-045|신데렐라 : 크리스탈 웨이브|유|폭|7|9500|3|1|0
+BT08-046|뷰티-풀|스|폭|1|||0|0
+BT08-047|특별 수업|스|폭|2|||0|0
+BT08-048|유리 구두 풀 컨텍트 W|스|폭|2|||0|0
+BT08-049|칠흑여제|스|폭|3|||0|0
+BT08-050|레어 메탈 바이저|아|폭|1|||0|0
+BT08-051|매터 타입 : α 베스트|아|폭|2|||0|0
+BT08-052|앨리스 - 메르헨 드림|리|파||||0|0|4|O|파
+BT08-053|앵커 : 이노센트 메이드|유|파|2|2000|1|0|0
+BT08-054|폴크방 - 모이스트 래빗|유|파|2|2000|1|0|0
+BT08-055|아크레인저 블랙|유|파|2|2500|1|0|0
+BT08-056|폴리 - 치얼 업 폴리스|유|파|2|1000|1|0|0
+BT08-057|이사벨 - 허니문 파티|유|파|3|2000|1|0|0
+BT08-058|백학|유|파|3|3000|1|0|0
+BT08-059|메어리 : 베이 갓데스|유|파|4|2500|2|0|0
+BT08-060|메카미 시프티|유|파|4|2500|2|0|0
+BT08-061|마스트 : 로망틱 메이드 - 티 서비스|유|파|5|4000|2|1|0
+BT08-062|앨리스 - 메르헨 드림|유|파|5|4000|2|1|0
+BT08-063|궁극! 아크 블랙 메테오!|스|파|0|||0|0
+BT08-064|메뉴 준비됐수다!|스|파|1|||0|0
+BT08-065|특약 효력|스|파|1|||0|0
+BT08-066|아크레인저|스|파|1|||0|0
+BT08-067|갓데시움 슈즈|아|파|2|||0|0
+BT08-068|노른 코드 자켓|아|파|2|||0|0
+BT08-069|지즈|리|번||||0|0|5|O|번
+BT08-070|네로|유|번|1|2500|1|0|0
+BT08-071|에이드 : 에이전트 바니|유|번|1|2500|1|0|0
+BT08-072|일레그 : 붐 앤 쇼크|유|번|2|3000|1|0|0
+BT08-073|에이드 - 메이드 인 스프링|유|번|2|2500|1|0|0
+BT08-074|차임|유|번|2|3000|1|0|0
+BT08-075|크라운 - 영화|유|번|2|3000|1|0|0
+BT08-076|벨벳 - 센슈얼 래빗|유|번|3|4000|1|0|0
+BT08-077|지즈|유|번|4|5000|2|1|0
+BT08-078|바하무트|유|번|5|6000|2|1|0
+BT08-079|깔끔한 마무리|스|번|0|||0|0
+BT08-080|네이키드 리틀 킹|스|번|3|||0|0
+BT08-081|안아··· 줘.|스|번|3|||0|0
+BT08-082|잡아먹힐 거야아···!|스|번|3|||0|0
+BT08-083|패턴 시리즈 : 31 건틀렛|아|번|0|||0|0
+BT08-084|패턴 시리즈 : 31 프로텍터|아|번|0|||0|0
+BT08-085|패턴 시리즈 : 31 헬멧|아|번|0|||0|0
+BT09-001|키사키(수영복)|리|대||||0|1|6|O|대
+BT09-002|시즈코|유|대|1|3000|1|0|1
+BT09-003|노조미|유|대|2|3500|1|0|1
+BT09-004|츠쿠요|유|대|2|3000|1|0|1
+BT09-005|나구사(수영복)|유|대|3|3000|1|0|1
+BT09-006|아츠코(수영복)|유|대|2|4000|1|0|1
+BT09-007|히카리|유|대|2|3000|1|0|1
+BT09-008|미나|유|대|3|4500|1|0|1
+BT09-009|카에데|유|대|3|5000|1|0|1
+BT09-010|이즈나(수영복)|유|대|3|500|1|0|1
+BT09-011|슌(수영복)|유|대|3|5000|1|1|1
+BT09-012|레이죠|유|대|4|5000|2|0|1
+BT09-013|히요리(수영복)|유|대|4|4000|2|1|1
+BT09-014|사오리(수영복)|유|대|4|3500|2|0|1
+BT09-015|스바루|유|대|5|5500|2|0|1
+BT09-016|유카리|유|대|5|6000|2|0|1
+BT09-017|츠바키|유|대|5|5000|2|0|1
+BT09-018|와카모(수영복)|유|대|5|6000|2|0|1
+BT09-019|키사키(수영복)|유|대|4|2000|2|1|1
+BT09-020|선언: 금일휴업|스|대|1|||0|1
+BT09-021|둘만의 비밀 신호|스|대|1|||0|1
+BT09-022|부스터 온!!!|스|대|2|||0|1
+BT09-023|공연, 시작!|스|대|1|||0|1
+BT09-024|함께 손을 잡고서|스|대|3|||0|1
+BT09-025|소녀는 여기 있사와요|스|대|3|||0|1
+BT09-026|스포츠용 장갑|아|대|1|||0|1
+BT09-027|헤어 슈슈|아|대|2|||0|1
+BT09-028|아리스(무장)|리|파||||0|1|5|O|파
+BT09-029|모모이|유|파|1|500|1|0|1
+BT09-030|아카네|유|파|1|1000|1|0|1
+BT09-031|코타마|유|파|1|2000|1|0|1
+BT09-032|히비키(응원단)|유|파|1|2000|1|0|1
+BT09-033|마키|유|파|2|2000|1|0|1
+BT09-034|미도리|유|파|2|2500|1|0|1
+BT09-035|토키|유|파|2|2500|1|0|1
+BT09-036|하레|유|파|2|3000|1|0|1
+BT09-037|케이|유|파|2|1500|1|0|1
+BT09-038|유즈|유|파|3|3000|1|0|1
+BT09-039|치히로|유|파|3|4000|1|0|1
+BT09-040|에이미(무장)|유|파|3|2500|1|0|1
+BT09-041|유우카(체육복)|유|파|2|2000|1|0|1
+BT09-042|히마리(무장)|유|파|3|4000|1|1|1
+BT09-043|카린(바니걸)|유|파|4|3500|2|0|1
+BT09-044|아스나(바니걸)|유|파|5|5500|2|0|1
+BT09-045|아리스(무장)|유|파|5|5500|2|1|1
+BT09-046|리오(무장)|유|파|6|6000|2|1|1
+BT09-047|메이드 중의 메이드|스|파|0|||0|1
+BT09-048|신비한 밤하늘이지?|스|파|1|||0|1
+BT09-049|어쩐지 부끄러워···|스|파|2|||0|1
+BT09-050|포기하지 않는 마음|스|파|2|||1|1
+BT09-051|저격 임무 중이고······!|스|파|3|||0|1
+BT09-052|이거 좀 봐!|스|파|2|||0|1
+BT09-053|무지 캡모자|아|파|1|||0|1
+BT09-054|서벌 금속 배지|아|파|2|||0|1
+BT09-055|미카(수영복)|리|번||||0|1|5|O|번
+BT09-056|시미코|유|번|1|2500|1|0|1
+BT09-057|아이리|유|번|1|2500|1|0|1
+BT09-058|코하루|유|번|1|2500|1|0|1
+BT09-059|하나에|유|번|1|2500|1|0|1
+BT09-060|우이(수영복)|유|번|1|2500|1|0|1
+BT09-061|마리|유|번|2|3500|1|0|1
+BT09-062|요시미|유|번|2|3500|1|0|1
+BT09-063|츠루기|유|번|2|3000|1|0|1
+BT09-064|세리나(크리스마스)|유|번|2|3000|1|0|1
+BT09-065|세이아|유|번|2|3000|1|0|1
+BT09-066|이치카(수영복)|유|번|2|4500|1|1|1
+BT09-067|하나코(수영복)|유|번|2|3000|1|0|1
+BT09-068|히후미|유|번|3|3500|1|0|1
+BT09-069|사쿠라코(아이돌)|유|번|3|3500|1|0|1
+BT09-070|미네(아이돌)|유|번|3|1000|1|0|1
+BT09-071|아즈사|유|번|3|4000|1|1|1
+BT09-072|미카(수영복)|유|번|4|5000|2|1|1
+BT09-073|하스미(수영복)|유|번|5|6500|2|1|1
+BT09-074|갭 모에 아이돌|스|번|2|||0|1
+BT09-075|치료시간이에요~|스|번|2|||0|1
+BT09-076|한여름의 진실함|스|번|2|||0|1
+BT09-077|팬들의 성원|스|번|1|||0|1
+BT09-078|발열팩|아|번|1|||0|1
+BT09-079|어그 부츠|아|번|1|||0|1
+BT09-080|가죽 손목 시계|아|번|2|||0|1
+BT09-081|방수 스포츠백|아|번|2|||0|1
+PR01-001|보건교사 율하|유|화|2|3000|1|1|5
+PR01-002|여름 방학 샬롯|유|화|2|3000|1|0|5
+PR01-003|쾌속의 기수 세크레트|유|화|3|2000|1|0|5
+PR01-004|해변의 벨로나|유|화|4|4000|2|0|5
+PR01-005|아키|유|화|5|5000|2|1|5
+PR01-006|봉염의 의식|스|화|2|||0|5
+PR01-007|배드캣 아밍|유|폭|2|2500|1|0|5
+PR01-008|유피네 : 앙증맞은 꽃망울|유|폭|2|3000|1|0|5
+PR01-009|비탄의 로제|유|폭|4|5000|2|0|5
+PR01-010|헤카테|유|폭|4|5000|2|0|5
+PR01-011|생명의 요람|스|폭|3|||1|5
+PR01-012|알라바스트론|스|폭|3|||0|5
+SB01-001|루주-언럭키 래빗|유|화|3|1000|1|0|0
+SB01-002|베이-래디언트 래빗|유|화|4|3000|2|0|0
+SB01-003|라피 : 레드 후드-레드 플레이버|유|화|5|6000|2|1|0
+SB01-004|레드 플레이버|스|화|2|||0|0
+SB01-005|팀 바니걸 결성|스|화|5|||0|0
+SB01-006|소라|유|대|3|3500|1|0|0
+SB01-007|티아-스윗 셰프|유|대|3|1500|1|0|0
+SB01-008|홍련-레이서즈 하이|유|대|3|3000|1|0|0
+SB01-009|나가-엘레강스 데이트|유|대|6|5500|2|0|0
+SB01-010|나유타|유|대|7|8000|3|1|0
+SB01-011|엑시아-해커 래빗|유|폭|2|2000|1|0|0
+SB01-012|미하라 : 본딩 체인-페인 이터|유|폭|2|2500|1|1|0
+SB01-013|리버렐리오|유|폭|3|5000|1|0|0
+SB01-014|페인 이터|스|폭|3|||0|0
+SB01-015|차분한 수심|스|폭|3|||0|0
+SB01-016|아인-핸드메이드 페스타|유|파|1|500|1|0|0
+SB01-017|츠바이-퍼스트 페스타|유|파|2|2000|1|0|0
+SB01-018|헬름-샹들리에 라이트|유|파|3|1000|1|0|0
+SB01-019|토브-썬블레이즈|유|파|4|4000|2|1|0
+SB01-020|도로시 : 세렌디피티|유|파|5|5000|2|1|0
+SB01-021|일레그 : 붐 앤 쇼크|유|번|1|2000|1|1|0
+SB01-022|밀크 : 블루밍 바니|유|번|2|2000|1|0|0
+SB01-023|센티-오션 리페어|유|번|2|2000|1|0|0
+SB01-024|에이드 : 에이전트 바니|유|번|3|3000|1|0|0
+SB01-025|13 고스트|스|번|0|||0|0
+SB02-001|악역 영애 아드리아나|리|화||||0|2|5|M|화
+SB02-002|안전 교관 에스텔|유|화|1|1500|1|0|2
+SB02-003|파이널 랩 로지|유|화|3|8000|1|0|2
+SB02-004|포디엄 피니시 블레어|유|화|3|3500|1|0|2
+SB02-005|코렐라인|유|화|4|4000|2|0|2
+SB02-006|악역 영애 아드리아나|유|화|5|4000|2|1|2
+SB02-007|아스트라 버스트!|스|화|2|||0|2
+SB02-008|위도우 메이커|아|화|1|||0|2
+SB02-009|전학생 샬럿|리|대||||0|2|6|M|대
+SB02-010|선생님 캐시|유|대|1|2500|1|0|2
+SB02-011|암향소영 츠바메|유|대|2|3500|1|0|2
+SB02-012|현묵청화 슈린|유|대|3|3000|1|0|2
+SB02-013|당신과 나의 네코마츠리 이렘|유|대|3|3500|1|1|2
+SB02-014|전학생 샬럿|유|대|3|4500|1|0|2
+SB02-015|이 몸의 시간이로구나.|스|대|4|||1|2
+SB02-016|피스브링어|아|대|2|||0|2
+SB02-017|노블 에이스 바니 헤이즈|리|폭||||0|2|5|M|폭
+SB02-018|글루미 바니 키아라|유|폭|1|1500|1|0|2
+SB02-019|고스트헌터 히스이|유|폭|1|1500|1|0|2
+SB02-020|아 라 모드 바니 마이|유|폭|2|2000|1|0|2
+SB02-021|럭키 히어로 바니 유스티나|유|폭|4|4500|2|1|2
+SB02-022|노블 에이스 바니 헤이즈|유|폭|7|5500|3|1|2
+SB02-023|로얄 스트레이트 플러시|스|폭|3|||0|2
+SB02-024|헬파이어|아|폭|1|||0|2
+SB02-025|스파클링 트윈즈 데비&마를렌|리|파||||0|2|4|M|파
+SB02-026|프라이빗 썸머 헤이즈|유|파|2|1500|1|0|2
+SB02-027|썸머 파티 매지션 엠마|유|파|3|2000|1|0|2
+SB02-028|한여름의 추억 이바|유|파|4|2000|2|1|2
+SB02-029|해변가 수아|유|파|4|5000|2|0|2
+SB02-030|스파클링 트윈즈 데비&마를렌|유|파|5|5000|2|1|2
+SB02-031|바다에 관한 이야기|스|파|2|||0|2
+SB02-032|흑련비표|아|파|1|||0|2
+SB02-033|장난꾸러기 곰돌이 메이드 레니|리|번||||0|2|5|M|번
+SB02-034|살금살금 땨람쥐 메이드 띠아|유|번|1|2500|1|1|2
+SB02-035|실수투성이 냥냥 메이드 혜진|유|번|2|1000|1|0|2
+SB02-036|꾸벅꾸벅 아기 새 메이드 바냐|유|번|3|3500|1|0|2
+SB02-037|사관후보생 나딘|유|번|3|1000|1|0|2
+SB02-038|장난꾸러기 곰돌이 메이드 레니|유|번|4|3000|2|0|2
+SB02-039|준비됐어? 그럼 가자.|스|번|2|||0|2
+SB02-040|하이 눈|아|번|2|||0|2
+ST01-001|라피|리|화||||0|0|5|O|화
+ST01-002|네온|유|화|1|3000|1|0|0
+ST01-003|베스티|유|화|1|2500|1|0|0
+ST01-004|은화|유|화|2|4000|1|0|0
+ST01-005|노이즈|유|화|2|3000|1|0|0
+ST01-006|누아르|유|화|2|2000|1|0|0
+ST01-007|바이퍼|유|화|3|4500|1|0|0
+ST01-008|블랑|유|화|4|5500|2|0|0
+ST01-009|엠마|유|화|5|7000|2|0|0
+ST01-010|아니스|유|화|6|6500|2|1|0
+ST01-011|라피|유|화|7|7500|3|1|0
+ST01-012|약점 간파|스|화|1|||0|0
+ST01-013|전력 보강|스|화|2|||1|0
+ST01-014|오직 화력!|스|화|3|||0|0
+ST01-015|미사일|스|화|4|||1|0
+ST01-016|레어 메탈 부츠|아|화|1|||0|0
+ST01-017|케블라 글러브|아|화|2|||0|0
+ST02-001|길티|리|대||||0|0|6|O|대
+ST02-002|N102|유|대|1|3500|1|0|0
+ST02-003|미카|유|대|1|1500|1|0|0
+ST02-004|율리아|유|대|2|4500|1|0|0
+ST02-005|얀|유|대|3|2500|1|0|0
+ST02-006|도라|유|대|3|5500|1|0|0
+ST02-007|브리드|유|대|3|3500|1|1|0
+ST02-008|마르차나|유|대|4|6500|2|0|0
+ST02-009|길티|유|대|5|8500|2|1|0
+ST02-010|스노우 화이트|유|대|6|6500|2|1|0
+ST02-011|디젤|유|대|7|3000|3|0|0
+ST02-012|크레센도|스|대|1|||0|0
+ST02-013|스승의 은혜|스|대|2|||0|0
+ST02-014|프라이즈|스|대|3|||0|0
+ST02-015|엑셀러레이션|스|대|4|||1|0
+ST02-016|케블라 프로텍터|아|대|1|||0|0
+ST02-017|레어 메탈 헬멧|아|대|3|||0|0
+ST03-001|모더니아|리|폭||||0|0|4|O|폭
+ST03-002|델타|유|폭|1|2500|1|0|0
+ST03-003|프리바티|유|폭|1|500|1|1|0
+ST03-004|유니|유|폭|2|3500|1|0|0
+ST03-005|노벨|유|폭|2|2500|1|0|0
+ST03-006|사쿠라|유|폭|2|2500|1|0|0
+ST03-007|D|유|폭|3|4000|1|0|0
+ST03-008|엑시아|유|폭|4|5000|2|0|0
+ST03-009|메이든|유|폭|5|6500|2|0|0
+ST03-010|로산나|유|폭|6|6500|2|1|0
+ST03-011|모더니아|유|폭|7|6500|3|1|0
+ST03-012|기습|스|폭|1|||0|0
+ST03-013|흑화|스|폭|2|||0|0
+ST03-014|센스 쉐어링|스|폭|3|||0|0
+ST03-015|다 덤벼!|스|폭|4|||1|0
+ST03-016|케블라 베스트|아|폭|2|||0|0
+ST03-017|레어 메탈 암가드|아|폭|2|||0|0
+ST04-001|도로시|리|파||||0|0|4|O|파
+ST04-002|iDoll 플라워|유|파|1|2500|1|0|0
+ST04-003|마리안|유|파|1|2000|1|0|0
+ST04-004|라이|유|파|2|3500|1|0|0
+ST04-005|메어리|유|파|2|2500|1|0|0
+ST04-006|노아|유|파|2|2000|1|0|0
+ST04-007|앨리스|유|파|3|3000|1|1|0
+ST04-008|루드밀라|유|파|4|5000|2|0|0
+ST04-009|마스트|유|파|5|6500|2|0|0
+ST04-010|헬름|유|파|6|5000|2|0|0
+ST04-011|도로시|유|파|7|7000|3|0|0
+ST04-012|선배의 응원|스|파|1|||0|0
+ST04-013|약오르죠?|스|파|2|||1|0
+ST04-014|너싱|스|파|3|||0|0
+ST04-015|실낙원|스|파|4|||1|0
+ST04-016|케블라 자켓|아|파|1|||0|0
+ST04-017|레어 메탈 글러브|아|파|2|||1|0
+ST05-001|프리바티 : 언카인드 메이드|리|번||||0|0|5|O|번
+ST05-002|프로덕트 08|유|번|1|3000|1|0|0
+ST05-003|슈가|유|번|1|2500|1|0|0
+ST05-004|프림|유|번|2|4000|1|0|0
+ST05-005|맥스웰|유|번|2|3500|1|0|0
+ST05-006|크라운|유|번|3|3000|1|1|0
+ST05-007|소다|유|번|3|4000|1|0|0
+ST05-008|리타|유|번|4|5500|2|0|0
+ST05-009|드레이크|유|번|5|7000|2|0|0
+ST05-010|센티|유|번|6|7000|2|0|0
+ST05-011|프리바티 : 언카인드 메이드|유|번|7|9000|3|1|0
+ST05-012|현장검토|스|번|2|||1|0
+ST05-013|리타 부스트|스|번|3|||0|0
+ST05-014|원 포 올|스|번|4|||1|0
+ST05-015|케블라 게이터|아|번|1|||0|0
+ST05-016|레어 메탈 건틀렛|아|번|2|||0|0
+ST05-017|레어 메탈 게이터|아|번|2|||0|0
+ST06-001|리나크|리|화||||0|5|5|O|화
+ST06-002|소악마 루아|유|화|1|2000|1|0|5
+ST06-003|실크|유|화|1|1000|1|0|5
+ST06-004|유나|유|화|1|500|1|0|5
+ST06-005|데스티나 : 따스한 봄바람|유|화|2|3000|1|0|5
+ST06-006|이세리아|유|화|2|1500|1|0|5
+ST06-007|심판자 키세|유|화|3|3000|1|0|5
+ST06-008|리나크|유|화|3|2500|1|1|5
+ST06-009|구원자 아딘|유|화|4|5000|2|0|5
+ST06-010|기원의 라스|유|화|4|4000|2|0|5
+ST06-011|심판자 키세 : 성광의 계승자|유|화|5|1000|2|1|5
+ST06-012|빛의 루엘 : 광휘의 계승자|유|화|7|7500|3|1|5
+ST06-013|이계의 머시너리|스|화|3|||0|5
+ST06-014|찬란한 영원|스|화|3|||1|5
+ST06-015|은밀한 손길|스|화|6|||0|5
+ST06-016|사랑해, 기억해, 영원히.|스|화|7|||0|5
+ST06-017|흑요석 반지|아|화|2|||0|5
+ST07-001|페네|리|폭||||0|5|4|O|폭
+ST07-002|뒤틀린 망령 카일론|유|폭|1|1500|1|0|5
+ST07-003|필리스|유|폭|1|1500|1|0|5
+ST07-004|세크레트|유|폭|2|2500|1|0|5
+ST07-005|최강 모델 루루카|유|폭|2|2500|1|0|5
+ST07-006|페네|유|폭|2|2000|1|1|5
+ST07-007|라비|유|폭|3|2500|1|0|5
+ST07-008|릴리벳|유|폭|3|4000|1|0|5
+ST07-009|후미르|유|폭|3|3000|1|0|5
+ST07-010|벨리안|유|폭|3|2500|1|1|5
+ST07-011|하르세티|유|폭|5|5500|2|1|5
+ST07-012|비르기타|유|폭|6|6000|2|0|5
+ST07-013|빛나는 자신감|스|폭|1|||0|5
+ST07-014|망상 끝의 런웨이|스|폭|2|||1|5
+ST07-015|창조의 포 & 파괴의 숑|스|폭|2|||0|5
+ST07-016|사랑의 증거|스|폭|3|||0|5
+ST07-017|어비스 드레이크 가죽갑옷|아|폭|1|||0|5
+ST08-001|1st Anniversary 수아|리|대||||0|2|7|M|대
+ST08-002|문제아 니키|유|대|1|3000|1|0|2
+ST08-003|레니|유|대|2|1500|1|0|2
+ST08-004|불꽃놀이 아야|유|대|3|3500|1|1|2
+ST08-005|학생회장 엘레나|유|대|4|6000|2|0|2
+ST08-006|1st Anniversary 수아|유|대|4|5000|2|1|2
+ST08-007|요밀로|유|대|7|8500|3|0|2
+ST08-008|가르쳐 드리죠.|스|대|2|||0|2
+ST08-009|같이 한잔하겠어?|스|대|2|||0|2
+ST08-010|뿅망치|아|대|0|||0|2
+ST08-011|유스티나|유|화|1|1500|1|0|2
+ST08-012|발렌타인 이바|유|화|2|2000|1|0|2
+ST08-013|작전 교관 라우라|유|화|5|4000|2|0|2
+ST08-014|타락의 유열 샬럿|유|화|6|11000|2|1|2
+ST08-015|전체 주목!|스|화|1|||0|2
+ST08-016|타락의 유열 속으로|스|화|4|||1|2
+ST08-017|더 썬|아|화|2|||0|2
+ST09-001|트로피컬 디멘션 아비게일|리|파||||0|2|5|M|파
+ST09-002|선샤인 마린 일레븐|유|파|2|1000|1|0|2
+ST09-003|한여름의 축제 펠릭스|유|파|3|1000|1|0|2
+ST09-004|한여름의 꿈 바냐|유|파|4|4000|2|0|2
+ST09-005|해변가 키아라|유|파|5|5000|2|0|2
+ST09-006|트로피컬 디멘션 아비게일|유|파|7|8000|3|1|2
+ST09-007|몽환 나비|스|파|1|||0|2
+ST09-008|제대로 그려볼까?|스|파|2|||1|2
+ST09-009|만년한파|아|파|0|||0|2
+ST09-010|구원받지 못한 이안|유|폭|1|1000|1|0|2
+ST09-011|고스트헌터 혜진|유|폭|2|2000|1|0|2
+ST09-012|프리즌 브레이크 캐시|유|폭|3|3500|1|1|2
+ST09-013|매지컬 래빗 엠마|유|폭|4|4500|2|1|2
+ST09-014|고스트헌터 유키|유|폭|6|2000|2|0|2
+ST09-015|과거는 중요하지 않아.|스|폭|3|||0|2
+ST09-016|운명의 인도|스|폭|4|||0|2
+ST09-017|생사부|아|폭|2|||0|2
+ST10-001|강철의 군주 빌헬미나|리|화||||0|3|5|O|화
+ST10-002|로빈 후드 제니스|유|화|1|2000|1|0|3
+ST10-003|사막의 꽃 실비아|유|화|1|4000|1|0|3
+ST10-004|암흑 성녀 리베르타|유|화|1|1000|1|0|3
+ST10-005|창조의 모루 레일라|유|화|1|2000|1|0|3
+ST10-006|사도 블레이드|유|화|2|2500|1|0|3
+ST10-007|사막의 가시 루비아|유|화|2|3500|1|0|3
+ST10-008|하얀 사신 유스티아|유|화|2|3000|1|0|3
+ST10-009|로데브의 별 리아트리스|유|화|3|3500|1|0|3
+ST10-010|해변의 천사 테레제|유|화|3|2500|1|0|3
+ST10-011|강철의 군주 빌헬미나|유|화|4|5000|2|1|3
+ST10-012|미궁의 문지기 네브리스|유|화|6|7000|2|0|3
+ST10-013|짐이 곧 베이룬이다|스|화|0|||1|3
+ST10-014|다, 당당하게 노출을!|스|화|3|||1|3
+ST10-015|심연의 응시|스|화|4|||0|3
+ST10-016|피의 기사|스|화|5|||1|3
+ST10-017|악룡의 마검|아|화|1|||0|3
+ST11-001|사도 모르페아|리|파||||0|3|5|O|파
+ST11-002|저주의 별 셀리아|유|파|1|4000|1|0|3
+ST11-003|탐욕의 별 레피테아|유|파|1|2000|1|0|3
+ST11-004|톱 아이돌 헬레나|유|파|1|1000|1|0|3
+ST11-005|타락의 별 안젤리카|유|파|2|2000|1|0|3
+ST11-006|푸른 마녀 세헤라자드|유|파|2|2500|1|0|3
+ST11-007|마지막 희망 로엔|유|파|3|3000|1|0|3
+ST11-008|악마의 딸 세이르|유|파|3|4000|1|0|3
+ST11-009|명월 달비|유|파|3|3500|1|1|3
+ST11-010|거룩한 자 미카엘라|유|파|4|3500|2|0|3
+ST11-011|공간의 마녀 이클립스|유|파|5|6000|2|0|3
+ST11-012|사도 모르페아|유|파|5|3000|2|1|3
+ST11-013|테라 드레인|스|파|0|||0|3
+ST11-014|아쿠아 브레이크|스|파|3|||0|3
+ST11-015|월야호담|스|파|4|||0|3
+ST11-016|블랙 오더|스|파|4|||1|3
+ST11-017|독사의 손길|아|파|1|||1|3
+ST12-001|와카모|리|대||||0|1|7|O|대
+ST12-002|치세|유|대|1|2500|1|0|1
+ST12-003|히요리|유|대|1|3000|1|0|1
+ST12-004|피나|유|대|2|2500|1|0|1
+ST12-005|사야|유|대|2|4000|1|0|1
+ST12-006|코코나|유|대|3|2500|1|0|1
+ST12-007|아오바|유|대|3|4000|1|0|1
+ST12-008|키사키|유|대|3|5000|1|1|1
+ST12-009|미사키|유|대|4|4500|2|0|1
+ST12-010|슌|유|대|6|6000|2|1|1
+ST12-011|와카모|유|대|6|8500|2|1|1
+ST12-012|달이, 아름답네|스|대|1|||0|1
+ST12-013|기다려주세요······!|스|대|1|||0|1
+ST12-014|다음에도 기대할게요|스|대|2|||0|1
+ST12-015|조령: 격물치지|스|대|2|||0|1
+ST12-016|어째서 인생은 이렇게······|스|대|3|||1|1
+ST12-017|방수 디지털 시계|아|대|1|||0|1
+ST13-001|유우카|리|파||||0|1|5|O|파
+ST13-002|히마리|유|파|1|2000|1|0|1
+ST13-003|노아|유|파|1|1000|1|0|1
+ST13-004|카린|유|파|1|2000|1|0|1
+ST13-005|코유키|유|파|1|2000|1|0|1
+ST13-006|에이미|유|파|2|500|1|0|1
+ST13-007|리오|유|파|2|3000|1|0|1
+ST13-008|스미레|유|파|3|2000|1|1|1
+ST13-009|네루|유|파|3|4000|1|0|1
+ST13-010|아스나|유|파|4|3500|2|1|1
+ST13-011|유우카|유|파|5|5000|2|1|1
+ST13-012|좀 더 힘껏······?|스|파|0|||1|1
+ST13-013|잘 부탁해, 나의 주인님!|스|파|0|||0|1
+ST13-014|스페셜리스트의 휴식|스|파|1|||0|1
+ST13-015|아앙~? 죽인다?|스|파|1|||0|1
+ST13-016|빅 시스터|스|파|3|||0|1
+ST13-017|교통안전 부적|아|파|2|||0|1
+ST14-001|마리(아이돌)|리|번||||0|1|5|O|번
+ST14-002|세리나|유|번|1|2500|1|0|1
+ST14-003|미네|유|번|1|2000|1|0|1
+ST14-004|사쿠라코|유|번|1|2500|1|0|1
+ST14-005|하스미|유|번|1|2000|1|0|1
+ST14-006|하나코|유|번|2|3500|1|0|1
+ST14-007|마리(아이돌)|유|번|2|1000|1|1|1
+ST14-008|우이|유|번|3|5000|1|1|1
+ST14-009|나기사|유|번|3|4500|1|0|1
+ST14-010|히나타|유|번|4|4000|2|0|1
+ST14-011|미카|유|번|4|5000|2|1|1
+ST14-012|엄청 편한가 봐?|스|번|0|||0|1
+ST14-013|빛이 함께하시라|스|번|1|||0|1
+ST14-014|우선 대화를···!|스|번|3|||1|1
+ST14-015|테니스 헤어밴드|아|번|0|||0|1
+ST14-016|블루투스 목걸이|아|번|1|||0|1
+ST14-017|핑크 스니커즈|아|번|1|||0|1`;
+const IP_NAMES = ["승리의 여신: 니케", "블루 아카이브", "이터널 리턴", "브라운더스트2", "스텔라 블레이드", "에픽세븐", "기타"];
+const IP_SHORT = ["니케", "블루 아카이브", "이터널 리턴", "브라운더스트2", "스텔라 블레이드", "에픽세븐", "기타"];
+const ATTR_NAME = { "화": "화염", "대": "대지", "폭": "폭풍", "파": "파도", "번": "번개" };
+const TYPE_NAME = { "리": "리더", "유": "유닛", "스": "스킬", "아": "아이템" };
+const MAX_SAME = 3, DECK_SIZE = 40, MAX_TRIG = 8;
+const DECK_CUR_KEY = "Nivel_Deck_Current", DECK_LIST_KEY = "Nivel_Decks";
+
+const CARDS = CARD_DATA.trim().split("\n").map((line, i) => {
+  const f = line.split("|");
+  const num = (v) => v === "" ? null : Number(v);
+  const c = { id: f[0], n: f[1], ty: f[2], at: f[3], c: num(f[4]), p: num(f[5]), h: num(f[6]), tr: f[7] === "1", ip: Number(f[8]), order: i };
+  if (c.ty === "리") { c.aw = num(f[9]); c.vt = f[10]; c.vc = f[11]; }
+  return c;
+});
+const CARD_BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
+
+// ---------- 리미트 레귤레이션 (공식 「금지·제한 카드 - 2026년 9월 7일」) ----------
+const LIMIT_REG = {
+  date: "2026. 09. 11",
+  ban: ["ST09-007", "BT05-003", "BT05-019", "BT05-027", "BT05-033", "BT05-044", "BT05-050", "BT05-072", "SB02-023"],
+  lim1: ["BT03-041", "SB01-014", "BT05-015", "SB01-005", "BT05-008", "ST08-014", "ST08-016", "ST09-013", "BT05-024", "BT05-036", "BT05-057"],
+  lim2: ["SB01-004", "BT05-065", "SB01-002"],
+  pairs: [["ST08-014", ["BT05-024"]], ["BT04-042", ["BT04-072", "BT04-073", "BT04-076"]]],
+  // 이번에 바뀐 카드: 이전 상태
+  changed: { "ST09-007": "3장", "BT05-003": "3장", "BT05-019": "3장", "BT05-027": "3장", "BT05-033": "3장", "BT05-044": "페어", "BT05-050": "3장", "BT05-072": "페어", "SB02-023": "3장",
+             "ST08-014": "3장", "ST08-016": "페어", "ST09-013": "3장", "BT05-024": "3장", "BT05-036": "3장", "BT05-057": "페어" },
+  released: [["BT05-044", "BT05-072", "둘 다 금지로 이동"], ["ST08-016", "BT05-057", "둘 다 1장 제한으로 이동"]],
+};
+// 카드별 최대 장수 (금지 0, 제한 1·2, 나머지 3)
+function Max_Copies(id) {
+  if (LIMIT_REG.ban.includes(id)) return 0;
+  if (LIMIT_REG.lim1.includes(id)) return 1;
+  if (LIMIT_REG.lim2.includes(id)) return 2;
+  return 3;
+}
+// 이 카드와 같이 넣을 수 없는 카드 목록 (금지 페어)
+function Pair_Partners(id) {
+  const out = [];
+  LIMIT_REG.pairs.forEach(([a, bs]) => { if (a === id) out.push(...bs); else if (bs.includes(id)) out.push(a); });
+  return out;
+}
+// 덱 안에서 금제를 어긴 카드 id 모음
+// (금지 페어에는 리더 카드도 있어서 리더도 같이 확인)
+function Limit_Violations(cards, leader) {
+  const bad = new Set();
+  const has = (id) => cards[id] || id === leader;
+  Object.entries(cards).forEach(([id, n]) => {
+    if (n > Max_Copies(id)) bad.add(id);
+    Pair_Partners(id).forEach(p => { if (has(p)) { bad.add(id); bad.add(p); } });
+  });
+  return bad;
+}
+
+// ---------- 덱 상태 ----------
+function New_Deck() { return { id: null, name: "", leader: null, cards: {} }; }
+let deck = New_Deck();
+try { const s = JSON.parse(localStorage.getItem(DECK_CUR_KEY)); if (s && s.cards) deck = s; } catch (e) {}
+
+function Save_Current() { try { localStorage.setItem(DECK_CUR_KEY, JSON.stringify(deck)); } catch (e) {} }
+function Load_List() { try { return JSON.parse(localStorage.getItem(DECK_LIST_KEY)) || []; } catch (e) { return []; } }
+function Save_List(list) { try { localStorage.setItem(DECK_LIST_KEY, JSON.stringify(list)); } catch (e) {} }
+
+function Deck_Total() { return Object.values(deck.cards).reduce((a, b) => a + b, 0); }
+function Deck_Trig() { return Object.entries(deck.cards).reduce((a, [id, n]) => a + (CARD_BY_ID[id] && CARD_BY_ID[id].tr ? n : 0), 0); }
+function Leader() { return deck.leader ? CARD_BY_ID[deck.leader] : null; }
+
+// 서약 "M"(혼합) 리더일 때, 서약 속성 이외의 속성들
+function Other_Colors(vc) {
+  const s = new Set();
+  Object.keys(deck.cards).forEach(id => { const c = CARD_BY_ID[id]; if (c && c.at !== vc) s.add(c.at); });
+  return s;
+}
+
+// 이 카드를 1장 더 넣을 수 있는지 (넣을 수 없으면 이유 반환)
+function Can_Add(card) {
+  if (card.ty === "리") return { ok: true };
+  const L = Leader();
+  if (!L) return { ok: false, why: "리더를 먼저 골라줘" };
+  if (!Color_Ok(card, L)) return { ok: false, why: "리더 서약에 맞지 않는 속성이야" };
+  const mx = Max_Copies(card.id);
+  if (mx === 0) return { ok: false, why: "금지 카드라서 덱에 넣을 수 없어" };
+  if ((deck.cards[card.id] || 0) >= mx) return { ok: false, why: mx < MAX_SAME ? `${mx === 2 ? "준제한" : "제한"} 카드라서 ${mx}장까지야` : "같은 카드는 3장까지야" };
+  const pp = Pair_Partners(card.id).find(p => deck.cards[p] || deck.leader === p);
+  if (pp) return { ok: false, why: `금지 페어: ${CARD_BY_ID[pp] ? CARD_BY_ID[pp].n : pp}와(과) 같이 넣을 수 없어` };
+  if (Deck_Total() >= DECK_SIZE) return { ok: false, why: "덱이 40장 꽉 찼어" };
+  if (card.tr && Deck_Trig() >= MAX_TRIG) return { ok: false, why: "트리거는 8장까지야" };
+  return { ok: true };
+}
+function Color_Ok(card, L) {
+  if (L.vt === "O") return card.at === L.vc;
+  if (card.at === L.vc) return true;
+  const others = Other_Colors(L.vc);
+  return others.size === 0 || others.has(card.at);
+}
+
+function Deck_Status() {
+  const L = Leader(), total = Deck_Total(), trig = Deck_Trig();
+  if (!L) return { ok: false, text: "리더 없음" };
+  if (Limit_Violations(deck.cards, deck.leader).size) return { ok: false, bad: true, text: "금제 위반" };
+  if (total < DECK_SIZE) return { ok: false, text: `${DECK_SIZE - total}장 더 필요` };
+  if (trig > MAX_TRIG) return { ok: false, text: "트리거 초과" };
+  if (L.vt === "M" && !Object.keys(deck.cards).some(id => CARD_BY_ID[id].at === L.vc))
+    return { ok: false, text: `[${ATTR_NAME[L.vc]}] 카드 필요` };
+  return { ok: true, text: "✔ 덱 완성" };
+}
+
+// ---------- 동작 ----------
+function Add_Card(card) {
+  if (card.ty === "리") { Try_Set_Leader(card); return; }
+  const r = Can_Add(card);
+  if (!r.ok) { Show_Toast(r.why); return; }
+  deck.cards[card.id] = (deck.cards[card.id] || 0) + 1;
+  Deck_Changed();
+}
+function Remove_Card(id) {
+  if (!deck.cards[id]) return;
+  deck.cards[id]--;
+  if (deck.cards[id] <= 0) delete deck.cards[id];
+  Show_Toast(`${CARD_BY_ID[id].n} 1장 뺐어`);
+  Deck_Changed();
+}
+
+// 리더를 바꿀 때, 새 서약에 안 맞는 카드는 확인 후 빼기
+function Try_Set_Leader(L) {
+  if (deck.leader === L.id) return;
+  const bad = [];
+  if (L.vt === "O") {
+    Object.keys(deck.cards).forEach(id => { if (CARD_BY_ID[id].at !== L.vc) bad.push(id); });
+  } else {
+    // 서약 속성 이외는 한 속성만 남김 (가장 많은 속성)
+    const cnt = {};
+    Object.entries(deck.cards).forEach(([id, n]) => { const a = CARD_BY_ID[id].at; if (a !== L.vc) cnt[a] = (cnt[a] || 0) + n; });
+    const keep = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
+    Object.keys(deck.cards).forEach(id => { const a = CARD_BY_ID[id].at; if (a !== L.vc && a !== keep) bad.push(id); });
+  }
+  Pair_Partners(L.id).forEach(p => { if (deck.cards[p] && !bad.includes(p)) bad.push(p); });   // 리더와 금지 페어인 카드
+  const apply = () => { bad.forEach(id => delete deck.cards[id]); deck.leader = L.id; Deck_Changed(); Show_Toast(`리더: ${L.n}`); };
+  if (bad.length === 0) { apply(); return; }
+  const n = bad.reduce((a, id) => a + deck.cards[id], 0);
+  Ask("리더 변경", `${L.n}(으)로 바꾸면 서약 또는 금지 페어에 걸리는 카드 ${n}장이 덱에서 빠져. 바꿀까?`, apply);
+}
+
+function Deck_Changed() { Save_Current(); Render_Deck(); if (Picker_Open()) Render_Picker(); }
+
+// ---------- 확인창 ----------
+let askYes = null;
+function Ask(title, text, onYes) {
+  document.getElementById("DC_Title").textContent = title;
+  document.getElementById("DC_Text").textContent = text;
+  askYes = onYes;
+  document.getElementById("D_Confirm").classList.add("Show");
+}
+document.getElementById("DC_Yes").addEventListener("click", () => { document.getElementById("D_Confirm").classList.remove("Show"); const f = askYes; askYes = null; if (f) f(); });
+document.getElementById("DC_No").addEventListener("click", () => { document.getElementById("D_Confirm").classList.remove("Show"); askYes = null; });
+
+// ---------- 카드 타일 ----------
+function Esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+function Card_Img(id) { return "cards/" + id + ".jpg"; }
+// 한 번 불러온 이미지는 기억해 두고, 다시 그릴 때 글자 카드가 깜빡이지 않게 바로 이미지로 표시
+const IMG_OK = new Set();
+function Img_Ok(el, id) { IMG_OK.add(id); el.parentNode.classList.add("HasImg"); }
+// 못 불러온 이미지(아직 없는 카드)도 기억해서 같은 요청을 반복하지 않음
+const IMG_FAIL = new Set();
+function Img_Fail(el, id) { IMG_FAIL.add(id); el.remove(); }
+function Tile(card, opt = {}) {
+  const cls = ["NC", "a-" + card.at];
+  if (opt.off) cls.push("Off");
+  if (opt.lead) cls.push("Lead");
+  if (opt.bad) cls.push("Bad");
+  const cost = card.ty === "리" ? (card.aw ? "Lv" + card.aw : "L") : (card.c ?? "");
+  const pw = card.p != null ? `<span class="Pw">${card.p}</span>` : (card.ty === "리" ? `<span class="Pw">리더</span>` : "");
+  const tr = card.tr ? `<span class="Tr">트리거</span>` : "";
+  const ct = opt.count ? `<span class="Ct">${opt.count}</span>` : "";
+  const mx = card.ty === "리" ? 3 : Max_Copies(card.id);
+  const lm = mx === 0 ? `<span class="Lm Ban">금지</span>` : mx < 3 ? `<span class="Lm L${mx}">${mx}장</span>` : "";
+  if (IMG_OK.has(card.id)) cls.push("HasImg");
+  const im = IMG_FAIL.has(card.id) ? "" : `<img class="Im" src="${Card_Img(card.id)}" alt="" loading="lazy" decoding="async" onload="Img_Ok(this,'${card.id}')" onerror="Img_Fail(this,'${card.id}')">`;
+  return `<button class="${cls.join(" ")}" data-id="${card.id}">${im}<span class="Co">${cost}</span>${pw}${tr}${ct}${lm}<div class="Nm">${Esc(card.n)}</div></button>`;
+}
+const EMPTY_TILE = `<div class="NC Empty">NIVEL<br>ARENA</div>`;
+
+function Sorted_Expanded(filterFn) {
+  const out = [];
+  Object.entries(deck.cards).map(([id, n]) => [CARD_BY_ID[id], n]).filter(([c]) => c && filterFn(c))
+    .sort(([a], [b]) => (a.c ?? 0) - (b.c ?? 0) || a.order - b.order)
+    .forEach(([c, n]) => { for (let i = 0; i < n; i++) out.push(c); });
+  return out;
+}
+
+// ---------- 덱 화면 그리기 ----------
+function Render_Deck() {
+  const total = Deck_Total(), trig = Deck_Trig(), L = Leader();
+  const setPill = (el, label, v, max) => { el.innerHTML = `${label}<b>${v}</b>/ ${max}`; el.classList.toggle("Full", v >= max); };
+  setPill(document.getElementById("D_CntDeck"), "덱", total, DECK_SIZE);
+  setPill(document.getElementById("D_CntTrig"), "트리거", trig, MAX_TRIG);
+  const st = Deck_Status(), stEl = document.getElementById("D_Status");
+  stEl.textContent = st.text; stEl.className = st.ok ? "Ok" : (st.bad ? "Bad" : "No");
+  const badSet = Limit_Violations(deck.cards, deck.leader);
+
+  const lb = document.getElementById("D_Leader");
+  if (L) {
+    lb.className = "Has L-" + L.at + (IMG_OK.has(L.id) ? " HasImg" : "");
+    const vow = L.vt === "O" ? `서약: [${ATTR_NAME[L.vc]}] 카드만` : `서약: [${ATTR_NAME[L.vc]}] 필수 + 1속성`;
+    lb.innerHTML = (IMG_FAIL.has(L.id) ? "" : `<img class="L_Img" src="${Card_Img(L.id)}" alt="" onload="Img_Ok(this,'${L.id}')" onerror="Img_Fail(this,'${L.id}')">`) + `<span class="L_Lv">LEVEL</span><div class="L_Vow">${vow}</div><div class="L_Name">${Esc(L.n)}</div>
+      <div class="L_Info"><span>${L.id} · ${ATTR_NAME[L.at]}</span><span>각성 Lv ${L.aw ?? "-"} · ${IP_SHORT[L.ip]}</span></div>`;
+  } else { lb.className = ""; lb.textContent = "리더를 눌러서 선택"; }
+
+  const trigCards = Sorted_Expanded(c => c.tr);
+  document.getElementById("D_TrigSmall").textContent = `${trig} / ${MAX_TRIG}`;
+  let th = trigCards.slice(0, 12).map(c => Tile(c, { bad: badSet.has(c.id) })).join("");
+  for (let i = trigCards.length; i < MAX_TRIG; i++) th += EMPTY_TILE;
+  document.getElementById("D_TrigRow").innerHTML = th;
+
+  const mainCards = Sorted_Expanded(c => !c.tr);
+  const cap = Math.max(DECK_SIZE - Math.min(trig, MAX_TRIG), mainCards.length);
+  document.getElementById("D_MainLab").textContent = `MAIN · ${mainCards.length}장`;
+  let mh = mainCards.map(c => Tile(c, { bad: badSet.has(c.id) })).join("");
+  for (let i = mainCards.length; i < cap; i++) mh += EMPTY_TILE;
+  const grid = document.getElementById("D_MainGrid");
+  grid.innerHTML = mh;
+  grid.style.gridTemplateRows = `repeat(${Math.max(3, Math.ceil(cap / 11))}, 1fr)`;
+}
+
+document.getElementById("D_TrigRow").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Remove_Card(b.dataset.id); });
+document.getElementById("D_MainGrid").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Remove_Card(b.dataset.id); });
+document.getElementById("D_Leader").addEventListener("click", () => Open_Picker(true));
+
+// ---------- 카드 추가 창 ----------
+const PF = { q: "", type: new Set(), at: new Set(), cost: new Set(), pow: new Set(), hit: new Set(), trig: "all", ip: new Set(), only: true };
+const POW_RANGES = [["~2000", 0, 2000], ["2500~4000", 2500, 4000], ["4500~6000", 4500, 6000], ["6500~8000", 6500, 8000], ["8500~", 8500, 99999]];
+const COST_KEYS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9+"];
+
+function Picker_Open() { return document.getElementById("Picker").classList.contains("Show"); }
+function Open_Picker(leaderOnly) {
+  if (leaderOnly || !Leader()) { PF.type = new Set(["리"]); }
+  else if (PF.type.has("리") && PF.type.size === 1) { PF.type = new Set(); }
+  document.getElementById("Picker").classList.add("Show");
+  Build_Filters(); Render_Picker();
+}
+document.getElementById("P_Close").addEventListener("click", () => document.getElementById("Picker").classList.remove("Show"));
+document.getElementById("D_AddBtn").addEventListener("click", () => Open_Picker(false));
+document.getElementById("P_Search").addEventListener("input", (e) => { PF.q = e.target.value.trim(); Render_Picker(); });
+
+function Build_Filters() {
+  const g = (title, key, items, multi = true) => {
+    const chips = items.map(([v, label]) => {
+      const on = multi ? PF[key].has(v) : String(PF[key]) === v;   // "보기"는 true/false 값이라 글자로 바꿔서 비교
+      return `<button class="P_Chip${on ? " On" : ""}" data-k="${key}" data-v="${v}" data-m="${multi ? 1 : 0}">${label}</button>`;
+    }).join("");
+    return `<div class="P_Group"><div class="P_GLab">${title}</div><div class="P_Chips">${chips}</div></div>`;
+  };
+  document.getElementById("P_Filters").innerHTML =
+    g("보기", "only", [["true", "넣을 수 있는 카드만"], ["false", "전체 보기"]], false) +
+    g("카드 종류", "type", [["리", "리더"], ["유", "유닛"], ["스", "스킬"], ["아", "아이템"]]) +
+    g("트리거", "trig", [["all", "전체"], ["y", "트리거만"], ["n", "트리거 제외"]], false) +
+    g("코스트", "cost", COST_KEYS.map(k => [k, k])) +
+    g("파워", "pow", POW_RANGES.map(([l], i) => [String(i), l])) +
+    g("히트", "hit", [["1", "1"], ["2", "2"], ["3", "3"]]) +
+    g("속성", "at", Object.entries(ATTR_NAME).map(([k, v]) => [k, v])) +
+    g("IP", "ip", IP_SHORT.slice(0, 6).map((n, i) => [String(i), n]));
+}
+document.getElementById("P_Filters").addEventListener("click", (e) => {
+  const b = e.target.closest(".P_Chip"); if (!b) return;
+  const k = b.dataset.k, v = b.dataset.v;
+  if (b.dataset.m === "1") { PF[k].has(v) ? PF[k].delete(v) : PF[k].add(v); }
+  else if (k === "only") { PF.only = v === "true"; }
+  else { PF[k] = v; }
+  Build_Filters(); Render_Picker();
+});
+
+function Match(c) {
+  if (PF.q && !c.n.toLowerCase().includes(PF.q.toLowerCase()) && !c.id.toLowerCase().includes(PF.q.toLowerCase())) return false;
+  if (PF.type.size && !PF.type.has(c.ty)) return false;
+  if (PF.at.size && !PF.at.has(c.at)) return false;
+  if (PF.ip.size && !PF.ip.has(String(c.ip))) return false;
+  if (PF.trig === "y" && !c.tr) return false;
+  if (PF.trig === "n" && c.tr) return false;
+  if (PF.cost.size) { if (c.c == null) return false; const k = c.c >= 9 ? "9+" : String(c.c); if (!PF.cost.has(k)) return false; }
+  if (PF.hit.size && !PF.hit.has(String(c.h))) return false;
+  if (PF.pow.size) { if (c.p == null) return false; if (![...PF.pow].some(i => { const r = POW_RANGES[+i]; return c.p >= r[1] && c.p <= r[2]; })) return false; }
+  if (PF.only && c.ty !== "리" && Leader() && !Color_Ok(c, Leader())) return false;
+  return true;
+}
+
+function Render_Picker() {
+  const total = Deck_Total(), trig = Deck_Trig();
+  const setPill = (el, label, v, max) => { el.innerHTML = `${label}<b>${v}</b>/ ${max}`; el.classList.toggle("Full", v >= max); };
+  setPill(document.getElementById("P_CntDeck"), "덱", total, DECK_SIZE);
+  setPill(document.getElementById("P_CntTrig"), "트리거", trig, MAX_TRIG);
+  const list = CARDS.filter(Match).sort((a, b) => (b.ty === "리") - (a.ty === "리") || (a.c ?? -1) - (b.c ?? -1) || a.order - b.order);
+  document.getElementById("P_Count").textContent = `${list.length}장`;
+  const grid = document.getElementById("P_Grid");
+  if (!list.length) { grid.innerHTML = `<div class="P_Empty">조건에 맞는 카드가 없어</div>`; return; }
+  grid.innerHTML = list.map(c => {
+    if (c.ty === "리") return Tile(c, { lead: true, count: deck.leader === c.id ? "선택됨" : "" });
+    return Tile(c, { off: !Can_Add(c).ok, count: deck.cards[c.id] ? deck.cards[c.id] + "/" + Max_Copies(c.id) : "" });
+  }).join("");
+}
+document.getElementById("P_Grid").addEventListener("click", (e) => {
+  const b = e.target.closest(".NC[data-id]"); if (!b) return;
+  const c = CARD_BY_ID[b.dataset.id];
+  Add_Card(c);
+  if (c.ty === "리" && deck.leader === c.id && PF.type.has("리") && PF.type.size === 1) { PF.type = new Set(); Build_Filters(); Render_Picker(); }
+});
+
+// ---------- 저장 · 덱 목록 · 초기화 ----------
+function Save_Deck() {
+  const list = Load_List();
+  if (!deck.id) deck.id = "d" + Date.now();
+  if (!deck.name) deck.name = Leader() ? Leader().n + " 덱" : "이름 없는 덱";
+  const copy = JSON.parse(JSON.stringify(deck));
+  const i = list.findIndex(d => d.id === deck.id);
+  if (i >= 0) list[i] = copy; else list.push(copy);
+  Save_List(list); Save_Current(); Render_Deck();
+  Show_Toast(`"${deck.name}" 저장했어`);
+}
+document.getElementById("D_Save").addEventListener("click", Save_Deck);
+
+function Render_List() {
+  const list = Load_List(), box = document.getElementById("DL_List");
+  if (!list.length) { box.innerHTML = `<p style="color:var(--sub);font-size:16px">저장된 덱이 없어. 덱을 만들고 "저장"을 눌러줘.</p>`; return; }
+  box.innerHTML = list.map(d => {
+    const L = d.leader ? CARD_BY_ID[d.leader] : null;
+    const n = Object.values(d.cards).reduce((a, b) => a + b, 0);
+    return `<div class="DL_Item${d.id === deck.id ? " Cur" : ""}"><div class="DL_Main"><div class="DL_Name">${Esc(d.name)}</div>
+      <div class="DL_Meta">${L ? Esc(L.n) : "리더 없음"} · ${n}/40${n === 40 && L ? ' · <span class="DL_Ok">40장</span>' : ""}</div></div>
+      <button class="DL_Btn" data-open="${d.id}">열기</button><button class="DL_Btn Red" data-del="${d.id}">삭제</button></div>`;
+  }).join("");
+}
+document.getElementById("D_ListBtn").addEventListener("click", () => { Render_List(); document.getElementById("D_ListLayer").classList.add("Show"); });
+document.getElementById("DL_Close").addEventListener("click", () => document.getElementById("D_ListLayer").classList.remove("Show"));
+document.getElementById("DL_New").addEventListener("click", () => {
+  deck = New_Deck(); Deck_Changed();
+  document.getElementById("D_ListLayer").classList.remove("Show");
+  Show_Toast("새 덱을 시작했어");
+});
+document.getElementById("DL_List").addEventListener("click", (e) => {
+  const o = e.target.closest("[data-open]"), d = e.target.closest("[data-del]");
+  if (o) {
+    const found = Load_List().find(x => x.id === o.dataset.open);
+    if (found) { deck = JSON.parse(JSON.stringify(found)); Deck_Changed(); document.getElementById("D_ListLayer").classList.remove("Show"); Show_Toast(`"${deck.name}" 열었어`); }
+  }
+  if (d) {
+    const target = Load_List().find(x => x.id === d.dataset.del);
+    if (!target) return;
+    Ask("덱 삭제", `"${target.name}" 덱을 삭제할까? 삭제하면 되돌릴 수 없어.`, () => {
+      Save_List(Load_List().filter(x => x.id !== target.id));
+      if (deck.id === target.id) { deck.id = null; Save_Current(); }
+      Render_List(); Show_Toast("삭제했어");
+    });
+  }
+});
+document.getElementById("D_ClearBtn").addEventListener("click", () => {
+  Ask("덱 초기화", "덱에 넣은 카드를 전부 뺄까? 리더와 덱 이름은 그대로 남아.", () => { deck.cards = {}; Deck_Changed(); Show_Toast("카드를 전부 뺐어"); });
+});
+
+// ---------- 리미트 레귤레이션 화면 ----------
+const LV_COL = { "화": "#c8364a", "대": "#1f9d6b", "폭": "#7b46c8", "파": "#2a72c8", "번": "#b8901c" };
+function LV_Row(id, badge = "") {
+  const c = CARD_BY_ID[id];
+  const col = c ? LV_COL[c.at] : "#555";
+  return `<div class="LV_Row"><span class="LV_Sq" style="background:${col}"></span><span class="LV_Id">${id}</span><span class="LV_Nm">${Esc(c ? c.n : id)}</span>${badge}</div>`;
+}
+function LV_Chg(id, now, cls) {
+  const old = LIMIT_REG.changed[id];
+  return old ? `<span class="LV_Chg"><span class="O">${old}</span><span class="A">▶</span><span class="W ${cls}">${now}</span></span>` : "";
+}
+function LV_Sec(color, title, count, body, extra = "") {
+  return `<div class="LV_Sec ${extra}"><button class="LV_Hd" style="--c:${color}"><span class="Ar">︿</span><span class="T">${title}</span><span class="N">${count}</span></button>${body}</div>`;
+}
+function Render_Limit() {
+  const R = LIMIT_REG;
+  document.getElementById("LV_DateTxt").textContent = R.date;
+  const rows = (ids, f) => `<div class="LV_Rows">${ids.map(id => LV_Row(id, f(id))).join("")}</div>`;
+  const pairs = R.pairs.map(([a, bs]) => `<div class="LV_P"><div class="PA">${LV_Row(a)}</div><span class="LV_X">✕</span><div class="PB">${bs.map(b => LV_Row(b)).join("")}</div></div>`).join("");
+  const rel = R.released.map(([a, b, w]) => `<div class="LV_P"><div class="PA">${LV_Row(a)}</div><span class="LV_X G">✕</span><div class="PB">${LV_Row(b)}</div><span class="LV_Why">${w}</span></div>`).join("");
+  document.getElementById("LV_Body").innerHTML =
+    LV_Sec("#c41622", "<b>금지</b> 카드", R.ban.length + "장", rows(R.ban, id => LV_Chg(id, "금지", "Red"))) +
+    LV_Sec("#e8792a", "<b>제한</b> 카드", R.lim1.length + "장", rows(R.lim1, id => LV_Chg(id, "1장", "Ora"))) +
+    LV_Sec("#d9a62a", "<b>준제한</b> 카드", R.lim2.length + "장", rows(R.lim2, () => "")) +
+    LV_Sec("#8a3bd6", "<b>금지</b> 페어 · A와 B는 같은 덱에 넣을 수 없음", R.pairs.length + "조", pairs) +
+    LV_Sec("#1f9d6b", "<b>이번에 해제</b>된 금지 페어", R.released.length + "조", rel, "LV_Rel") +
+    `<div class="LV_Note">※ 공식 홈페이지 「금지·제한 카드 - 2026년 9월 7일」·「금지·제한 카드 설명 - 2026년 9월 8일」 기준 · 화살표는 이전 상태 ▶ 지금 상태</div>`;
+}
+function Show_Limit(show) {
+  const v = document.getElementById("LimitView");
+  v.classList.toggle("Show", show);
+  if (show) { Render_Limit(); document.getElementById("LV_Body").scrollTop = 0; }
+}
+document.getElementById("LV_Body").addEventListener("click", (e) => { const h = e.target.closest(".LV_Hd"); if (h) h.parentElement.classList.toggle("Fold"); });
+document.getElementById("LV_Home").addEventListener("click", () => { Show_Limit(false); Show_Home(true); });
+document.getElementById("Home_Limit").addEventListener("click", () => { Show_Home(false); Show_Limit(true); });
+
+// ---------- 열기 · 닫기 ----------
+function Show_Deck(show) { document.getElementById("DeckView").classList.toggle("Show", show); if (show) Render_Deck(); }
+document.getElementById("D_Home").addEventListener("click", () => { document.getElementById("Picker").classList.remove("Show"); Show_Deck(false); Show_Home(true); });
+
+document.getElementById("Btn_New").addEventListener("click", () => Show_Modal("Modal_Reset_Log", true));
+// 타이머 초기화 체크(■ 초기화 / □ 유지) — 예·아니오 어느 쪽이든 적용
+let resetTimerChecked = false;
+const timerCheck = document.getElementById("Btn_Timer_Check");
+timerCheck.addEventListener("click", () => {
+  resetTimerChecked = !resetTimerChecked;
+  timerCheck.classList.toggle("On", resetTimerChecked);
+});
+function Confirm_Reset(clearLog) {
+  Show_Modal("Modal_Reset_Log", false);
+  if (resetTimerChecked) Timer_Reset();
+  Reset_Game(clearLog);
+  if (resetTimerChecked) state.log[state.log.length - 1].text = "초기화 (타이머 포함)";
+  Render_All();
+}
+document.getElementById("Btn_Log_Yes").addEventListener("click", () => Confirm_Reset(true));
+document.getElementById("Btn_Log_No").addEventListener("click", () => Confirm_Reset(false));
+document.getElementById("Btn_Awake_Center").addEventListener("click", () => Open_Awake(false));
+document.getElementById("Btn_Undo").addEventListener("click", Undo);
+document.getElementById("Btn_Log").addEventListener("click", () => { Render_Log(); Show_Modal("Modal_Log", true); });
+document.getElementById("Btn_Dice").addEventListener("click", () => Show_Modal("Modal_Dice", true));
+document.getElementById("Timer").addEventListener("click", Timer_Toggle);
+
+// 주사위(1~20): 숫자가 빠르게 바뀌며 굴러가다 점점 느려지고 멈춤
+let isRolling = false;
+function Roll_D20() {
+  if (isRolling) return;
+  isRolling = true;
+  const die = document.getElementById("D20");
+  const num = document.getElementById("D20_Num");
+  const result = 1 + Math.floor(Math.random() * 20);   // 결과는 먼저 정해둠
+  die.classList.remove("Landed", "Crit", "Fumble");
+  die.classList.add("Rolling");
+  document.getElementById("Coin_Result").textContent = "";
+
+  let delay = 32;                 // 숫자 바뀌는 간격(ms) — 점점 늘어남
+  const Tick = () => {
+    if (delay > 210) {            // 멈춤
+      num.textContent = result;
+      die.classList.remove("Rolling");
+      void die.offsetWidth;       // 애니메이션 재시작용
+      die.classList.add("Landed");
+      if (result === 20) die.classList.add("Crit");
+      if (result === 1) die.classList.add("Fumble");
+      Add_Log(`주사위(1~20) → ${result}`); Save_State();
+      isRolling = false;
+      return;
+    }
+    num.textContent = 1 + Math.floor(Math.random() * 20);
+    delay *= 1.26;               // 전체 연출 약 0.85초
+    setTimeout(Tick, delay);
+  };
+  Tick();
+}
+document.getElementById("Btn_Roll").addEventListener("click", Roll_D20);
+document.getElementById("D20").addEventListener("click", Roll_D20);   // 주사위 그림을 눌러도 굴러감
+document.getElementById("Btn_Coin").addEventListener("click", () => {
+  const r = Math.random() < 0.5 ? "앞면" : "뒷면";
+  if (isRolling) return;
+  document.getElementById("Coin_Result").textContent = "코인: " + r;
+  Add_Log(`코인 → ${r}`); Save_State();
+});
+
+// 각성 레벨 버튼을 양쪽 "각성 Lv" 배지와 같은 높이에 맞춤
+function Align_Awake_Button() {
+  const badge = document.querySelector("#Panel_p1 [data-ref=awake]");
+  const btn = document.getElementById("Btn_Awake_Center");
+  const col = document.getElementById("Center_Col");
+  const b = badge.getBoundingClientRect(), c = col.getBoundingClientRect();
+  const top = ((b.top + b.height / 2) - c.top) / appScale - btn.offsetHeight / 2;
+  btn.style.marginTop = Math.max(0, top) + "px";
+}
+// 기준 화면(아이패드 가로 1180×760 이상)보다 작으면 비율대로 축소
+const BASE_W = 1180, BASE_H = 760;
+let appScale = 1;
+function Fit_Screen() {
+  window.scrollTo(0, 0);
+  const stage = document.getElementById("Stage");
+  const vw = stage.clientWidth, vh = stage.clientHeight;
+  if (!vw || !vh) return;
+  appScale = Math.min(1, vw / BASE_W, vh / BASE_H);
+  const app = document.getElementById("App");
+  app.style.width = (vw / appScale) + "px";
+  app.style.height = (vh / appScale) + "px";
+  app.style.transform = appScale < 1 ? `scale(${appScale})` : "";
+  document.documentElement.style.setProperty("--app-scale", appScale);   // 팝업창도 같은 비율
+  Align_Awake_Button();
+}
+window.addEventListener("resize", Fit_Screen);
+window.addEventListener("orientationchange", () => { setTimeout(Fit_Screen, 100); setTimeout(Fit_Screen, 500); });
+if (window.visualViewport) visualViewport.addEventListener("resize", Fit_Screen);
+window.addEventListener("pageshow", Fit_Screen);
+
+// ---------- 시작 ----------
+Build_Panel("p1");
+Build_Panel("p2");
+let loaded = false;
+try {
+  const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+  if (saved && saved.p1 && saved.p2) { state = Object.assign({ log: [], timerMs: 0 }, saved); loaded = true; }
+} catch (e) {}
+state.p1.sizeMod = 0; state.p2.sizeMod = 0;   // 보정 버튼이 없으니 항상 0
+Render_All();
+Fit_Screen();
+</script>
+</body>
+</html>
