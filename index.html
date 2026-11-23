@@ -99,6 +99,30 @@
   #Update_Bar.Show { display: block; }
 
 
+
+  /* ================= 안전 이용 안내 ================= */
+  #N_Btn { position: absolute; top: 22px; right: 26px; display: flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
+    background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); }
+  #N_Btn:active, #N_Ok:active { filter: brightness(1.4); }
+  #N_Dim { position: absolute; inset: 0; z-index: 40; background: rgba(0,6,24,.72); display: none; place-items: center; }
+  #N_Dim.Show { display: grid; }
+  #N_Box { width: 720px; padding: 30px 36px 26px; background: linear-gradient(180deg, #0b2a78, #061848); border: 2px solid var(--neon); box-shadow: 0 0 30px rgba(79,227,255,.35);
+    clip-path: polygon(4% 0, 96% 0, 100% 6%, 100% 94%, 96% 100%, 4% 100%, 0 94%, 0 6%); }
+  #N_Box h2 { margin: 0 0 18px; font-size: 30px; font-weight: 900; font-style: italic; text-align: center; color: #fff; text-shadow: 0 0 12px rgba(79,227,255,.6); }
+  #N_Box .N_Url { text-align: center; margin-bottom: 18px; padding: 12px; font-size: 24px; font-weight: 900; color: var(--neon); background: rgba(2,10,36,.6); border: 1px solid rgba(79,227,255,.4); }
+  #N_Box .N_Url small { display: block; font-size: 14px; color: var(--sub); font-weight: 800; margin-bottom: 4px; }
+  #N_Box ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  #N_Box li { font-size: 19px; font-weight: 700; line-height: 1.45; padding-left: 30px; position: relative; }
+  #N_Box li:before { content: "✕"; position: absolute; left: 4px; color: #ff6b81; font-weight: 900; }
+  #N_Box li.Warn:before { content: "!"; color: #ffd54f; }
+  #N_Box .N_Row { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+  #N_Never { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; color: var(--sub); background: none; border: none; padding: 8px 0; font-family: inherit; }
+  #N_Never i { width: 24px; height: 24px; border: 2px solid var(--sub); display: grid; place-items: center; font-style: normal; font-size: 18px; color: #041a4a; }
+  #N_Never.On i { background: var(--neon); border-color: var(--neon); }
+  #N_Never.On i:after { content: "✔"; }
+  #N_Ok { height: 58px; padding: 0 54px; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); }
+
   /* ================= 리미트 레귤레이션 ================= */
   #LimitView {
     position: absolute; inset: 0; z-index: 12; display: none; flex-direction: column; gap: 10px;
@@ -502,6 +526,7 @@
 <div id="App">
   <!-- 홈 화면: 듀얼 / 덱 만들기 / 리미트 레귤레이션 -->
   <section id="Home" class="Show">
+    <button id="N_Btn">🛡 안전 안내</button>
     <div class="Home_Title">
       <div class="Home_Sub">NIVEL ARENA</div>
       <h1>니벨아레나 뉴런</h1>
@@ -605,6 +630,24 @@
   </section>
 
   <div id="Toast"></div>
+
+  <!-- 안전 이용 안내 창 -->
+  <div id="N_Dim">
+    <div id="N_Box">
+      <h2>안전 이용 안내</h2>
+      <div class="N_Url"><small>니벨 뉴런 공식 주소 (이 주소 하나뿐)</small>nivel-neuron.github.io</div>
+      <ul>
+        <li>니벨 뉴런은 <b>파일 다운로드·프로그램 설치</b>를 요구하지 않아요</li>
+        <li><b>로그인·비밀번호·개인정보·결제</b>를 요구하지 않아요</li>
+        <li>"니벨 뉴런 새 버전"이라며 받은 <b>다른 링크나 파일</b>은 열지 마세요</li>
+        <li class="Warn">이런 요청이 보이면 아무것도 누르지 말고 창을 닫아 주세요</li>
+      </ul>
+      <div class="N_Row">
+        <button id="N_Never"><i></i>다시 보지 않기</button>
+        <button id="N_Ok">확인</button>
+      </div>
+    </div>
+  </div>
   <button id="Update_Bar">새 버전이 있어 · 눌러서 업데이트</button>
   <div id="Top_Bar">
     <div><button class="Util_Btn Top_Util" id="Btn_Home" aria-label="홈"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button></div>
@@ -959,7 +1002,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-2145";
+const APP_VERSION = "20261123-2250";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -987,6 +1030,29 @@ function Show_Toast(text) {
   t._timer = setTimeout(() => t.classList.remove("Show"), 1600);
 }
 document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
+
+// ---------- 안전 이용 안내 (처음 열 때 + 홈의 "안전 안내" 버튼) ----------
+const NOTICE_KEY = "Nivel_Notice_Hide";
+function Show_Notice(show) {
+  document.getElementById("N_Dim").classList.toggle("Show", show);
+  if (show) {
+    let hidden = false;
+    try { hidden = localStorage.getItem(NOTICE_KEY) === "1"; } catch (e) {}
+    document.getElementById("N_Never").classList.toggle("On", hidden);
+  }
+}
+document.getElementById("N_Btn").addEventListener("click", () => Show_Notice(true));
+document.getElementById("N_Never").addEventListener("click", (e) => e.currentTarget.classList.toggle("On"));
+document.getElementById("N_Ok").addEventListener("click", () => {
+  const never = document.getElementById("N_Never").classList.contains("On");
+  try { never ? localStorage.setItem(NOTICE_KEY, "1") : localStorage.removeItem(NOTICE_KEY); } catch (e) {}
+  Show_Notice(false);
+});
+(function () {
+  let hidden = false;
+  try { hidden = localStorage.getItem(NOTICE_KEY) === "1"; } catch (e) {}
+  if (!hidden) Show_Notice(true);
+})();
 document.getElementById("Home_Duel").addEventListener("click", () => {
   Show_Home(false); Align_Awake_Button();
   Open_Awake(true);   // 듀얼 들어갈 때 각성 레벨부터 설정
