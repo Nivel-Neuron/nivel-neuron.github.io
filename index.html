@@ -245,6 +245,10 @@
   .NC.HasImg .Co, .NC.HasImg .Pw, .NC.HasImg .Tr, .NC.HasImg .Nm { display: none; }
   .NC.HasImg .Ct { bottom: 4px; }
   .NC.HasImg .Lm { bottom: 4px; }
+  /* 덱 화면(트리거 줄·메인)은 그림 위주로 크게 + 아래에 속성 색 이름 띠 */
+  #D_TrigRow .NC.HasImg .Nm, #D_MainGrid .NC.HasImg .Nm { display: grid; position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; min-height: 26px; padding: 3px 3px; opacity: .95; }
+  #D_TrigRow .NC.HasImg .Ct, #D_MainGrid .NC.HasImg .Ct, #D_TrigRow .NC.HasImg .Lm, #D_MainGrid .NC.HasImg .Lm { bottom: 30px; z-index: 2; }
+  #D_TrigRow .NC.HasImg .Tr, #D_MainGrid .NC.HasImg .Tr { display: block; z-index: 2; }
   #D_Leader .L_Img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
   #D_Leader.HasImg .L_Img { opacity: 1; }
   #D_Leader.HasImg .L_Name, #D_Leader.HasImg .L_Info, #D_Leader.HasImg .L_Lv { display: none; }
@@ -1002,7 +1006,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-2250";
+const APP_VERSION = "20261124-0020";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2429,7 +2433,18 @@ function Match(c) {
   return true;
 }
 
+// 카드 칸 높이를 칸 너비에 맞춰서 실제 카드 비율(63:88)로 유지 → 화면이 가로로 길어도 위아래가 안 잘림
+function Fit_Picker_Rows() {
+  const g = document.getElementById("P_Grid");
+  const cs = getComputedStyle(g);
+  const inner = g.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  if (inner <= 0) return;
+  const col = (inner - 8 * 7) / 8;
+  g.style.gridAutoRows = Math.round(col * 88 / 63) + "px";
+}
+window.addEventListener("resize", () => { if (Picker_Open()) Fit_Picker_Rows(); });
 function Render_Picker() {
+  Fit_Picker_Rows();
   const total = Deck_Total(), trig = Deck_Trig();
   const setPill = (el, label, v, max) => { el.innerHTML = `${label}<b>${v}</b>/ ${max}`; el.classList.toggle("Full", v >= max); };
   setPill(document.getElementById("P_CntDeck"), "덱", total, DECK_SIZE);
