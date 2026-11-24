@@ -6,7 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="니벨아레나 뉴런">
+<meta name="apple-mobile-web-app-title" content="니벨 뉴런">
+<meta name="theme-color" content="#041a4a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>니벨아레나 뉴런</title>
 <style>
   :root {
@@ -99,6 +103,31 @@
   #Update_Bar.Show { display: block; }
 
 
+
+
+  /* ================= 홈 화면에 추가 ================= */
+  #I_Btn { position: absolute; top: 22px; left: 26px; display: none; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
+    background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
+  #I_Btn.Show { display: flex; }
+  #I_Btn:active, #I_Ok:active { filter: brightness(1.4); }
+  #I_Dim { position: absolute; inset: 0; z-index: 41; background: rgba(0,6,24,.75); display: none; place-items: center; }
+  #I_Dim.Show { display: grid; }
+  #I_Box { width: 780px; padding: 28px 34px 24px; background: linear-gradient(180deg, #0b2a78, #061848); border: 2px solid var(--neon); box-shadow: 0 0 30px rgba(79,227,255,.35);
+    clip-path: polygon(4% 0, 96% 0, 100% 6%, 100% 94%, 96% 100%, 4% 100%, 0 94%, 0 6%); }
+  #I_Box h2 { margin: 0 0 6px; font-size: 30px; font-weight: 900; font-style: italic; text-align: center; color: #fff; text-shadow: 0 0 12px rgba(79,227,255,.6); }
+  #I_Sub { text-align: center; font-size: 17px; font-weight: 700; color: var(--sub); margin-bottom: 18px; }
+  .I_Steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .I_Step { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 10px 14px; background: rgba(2,10,36,.6); border: 1px solid rgba(79,227,255,.35); text-align: center; }
+  .I_Num { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--neon); color: #041a4a; font-weight: 900; font-size: 19px; }
+  .I_Pic { height: 64px; display: grid; place-items: center; }
+  .I_Pic .Key { padding: 8px 14px; border-radius: 10px; background: #f4f6fb; color: #1b2a4a; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .I_Pic .Key.Blue { background: none; color: #4ea3ff; font-size: 22px; }
+  .I_Txt { font-size: 17px; font-weight: 800; line-height: 1.45; }
+  .I_Txt b { color: #ffd54f; }
+  #I_Note { margin-top: 14px; font-size: 15px; font-weight: 700; color: var(--sub); text-align: center; line-height: 1.5; }
+  .I_Row { display: flex; justify-content: center; margin-top: 16px; }
+  #I_Ok { height: 58px; padding: 0 64px; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
 
   /* ================= 안전 이용 안내 ================= */
   #N_Btn { position: absolute; top: 22px; right: 26px; display: flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
@@ -607,6 +636,7 @@
   <!-- 홈 화면: 듀얼 / 덱 만들기 / 리미트 레귤레이션 -->
   <section id="Home" class="Show">
     <button id="N_Btn">🛡 주의 사항</button>
+    <button id="I_Btn">📲 홈 화면에 추가</button>
     <div class="Home_Title">
       <div class="Home_Sub">NIVEL ARENA</div>
       <h1>니벨아레나 뉴런</h1>
@@ -739,6 +769,17 @@
   </section>
 
   <div id="Toast"></div>
+
+  <!-- 홈 화면에 추가 안내 창 -->
+  <div id="I_Dim">
+    <div id="I_Box">
+      <h2>홈 화면에 추가</h2>
+      <div id="I_Sub">추가하면 주소창 없이 앱처럼 전체 화면으로 쓸 수 있어요</div>
+      <div class="I_Steps" id="I_Steps"></div>
+      <div id="I_Note"></div>
+      <div class="I_Row"><button id="I_Ok">확인</button></div>
+    </div>
+  </div>
 
   <!-- 안전 이용 안내 창 -->
   <div id="N_Dim">
@@ -1111,7 +1152,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0115";
+const APP_VERSION = "20261125-0130";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1139,6 +1180,63 @@ function Show_Toast(text) {
   t._timer = setTimeout(() => t.classList.remove("Show"), 1600);
 }
 document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
+
+
+// ---------- 홈 화면에 추가 (브라우저로 열었을 때만 왼쪽 위 버튼) ----------
+// 홈 화면 아이콘으로 열면(주소창 없는 상태) 이미 추가된 것이라 버튼을 숨김
+function Is_App_Mode() {
+  return window.navigator.standalone === true ||
+    ["standalone", "fullscreen", "minimal-ui"].some(m => window.matchMedia && window.matchMedia(`(display-mode: ${m})`).matches);
+}
+let INSTALL_EVT = null;   // 안드로이드 크롬이 주는 "앱 설치" 기회
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); INSTALL_EVT = e; Update_I_Btn(); });
+window.addEventListener("appinstalled", () => { INSTALL_EVT = null; document.getElementById("I_Btn").classList.remove("Show"); Show_Toast("홈 화면에 추가했어"); });
+function Update_I_Btn() { document.getElementById("I_Btn").classList.toggle("Show", !Is_App_Mode()); }
+function Device_Kind() {
+  const ua = navigator.userAgent || "";
+  const ipad = /iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ipad) return "ipad";
+  if (/iPhone|iPod/.test(ua)) return "iphone";
+  if (/Android/.test(ua)) return "android";
+  return "other";
+}
+const I_SHARE = `<svg width="26" height="30" viewBox="0 0 24 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9H5v16h14V9h-3"/><path d="M12 2v15M7.5 6.5 12 2l4.5 4.5"/></svg>`, I_PLUS = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`;
+function Show_I_Guide() {
+  const k = Device_Kind();
+  const step = (n, pic, txt) => `<div class="I_Step"><div class="I_Num">${n}</div><div class="I_Pic">${pic}</div><div class="I_Txt">${txt}</div></div>`;
+  let steps, note;
+  if (k === "iphone" || k === "ipad") {
+    steps = step(1, `<span class="Key Blue">${I_SHARE}</span>`, k === "iphone" ? `화면 <b>아래쪽</b> 가운데<br><b>공유 버튼</b>을 눌러요` : `주소창 <b>오른쪽 위</b><br><b>공유 버튼</b>을 눌러요`)
+          + step(2, `<span class="Key">${I_PLUS} 홈 화면에 추가</span>`, `메뉴를 내려서<br><b>홈 화면에 추가</b>를 눌러요`)
+          + step(3, `<span class="Key Blue">추가</span>`, `오른쪽 위<br><b>추가</b>를 눌러요`);
+    note = "사파리에서 열었을 때 가장 잘 돼요. 다른 앱 안에서 열렸다면 사파리로 열어 주세요.<br>다음부터는 홈 화면의 <b>니벨 뉴런</b> 아이콘으로 열면 돼요.";
+  } else if (k === "android") {
+    steps = step(1, `<span class="Key" style="font-size:26px;padding:4px 16px">⋮</span>`, `브라우저 <b>오른쪽 위</b><br><b>메뉴(⋮)</b>를 눌러요`)
+          + step(2, `<span class="Key">${I_PLUS} 앱 설치</span>`, `<b>앱 설치</b> 또는<br><b>홈 화면에 추가</b>를 눌러요`)
+          + step(3, `<span class="Key Blue">설치</span>`, `<b>설치</b>(또는 <b>추가</b>)를<br>눌러요`);
+    note = "삼성 인터넷은 아래쪽 메뉴(≡) → <b>현재 페이지 추가</b> → <b>홈 화면</b>이에요.<br>다음부터는 홈 화면의 <b>니벨 뉴런</b> 아이콘으로 열면 돼요.";
+  } else {
+    steps = step(1, `<span class="Key">📱</span>`, `휴대폰이나 태블릿으로<br>이 주소를 열어요`)
+          + step(2, `<span class="Key">${I_PLUS} 홈 화면에 추가</span>`, `브라우저 메뉴에서<br><b>홈 화면에 추가</b>`)
+          + step(3, `<span class="Key Blue">추가</span>`, `홈 화면의 아이콘으로<br>열어요`);
+    note = "컴퓨터 크롬은 주소창 오른쪽의 <b>설치</b> 아이콘으로도 설치할 수 있어요.";
+  }
+  document.getElementById("I_Steps").innerHTML = steps;
+  document.getElementById("I_Note").innerHTML = note;
+  document.getElementById("I_Dim").classList.add("Show");
+}
+document.getElementById("I_Btn").addEventListener("click", async () => {
+  if (INSTALL_EVT) {             // 안드로이드 크롬: 바로 "앱 설치" 확인창
+    const e = INSTALL_EVT; INSTALL_EVT = null;
+    e.prompt();
+    try { const r = await e.userChoice; if (r && r.outcome === "dismissed") Show_Toast("나중에 다시 눌러서 설치할 수 있어"); } catch (err) {}
+    return;
+  }
+  Show_I_Guide();                // 아이폰·아이패드·그 밖: 추가 방법 안내
+});
+document.getElementById("I_Ok").addEventListener("click", () => document.getElementById("I_Dim").classList.remove("Show"));
+Update_I_Btn();
+if (window.matchMedia) ["standalone", "fullscreen"].forEach(m => { const q = window.matchMedia(`(display-mode: ${m})`); q.addEventListener && q.addEventListener("change", Update_I_Btn); });
 
 // ---------- 안전 이용 안내 (처음 열 때 + 홈의 "안전 안내" 버튼) ----------
 const NOTICE_KEY = "Nivel_Notice_Hide";
