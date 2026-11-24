@@ -169,6 +169,7 @@
   #CD_Text .Ic.A-화 { background: #c8364a; border-color: #ff8d9b; } #CD_Text .Ic.A-대 { background: #1f9d6b; border-color: #5dffb0; }
   #CD_Text .Ic.A-폭 { background: #7b46c8; border-color: #c79bff; } #CD_Text .Ic.A-파 { background: #2a72c8; border-color: #6fc8ff; }
   #CD_Text .Ic.A-번 { background: #b8901c; border-color: #ffe27a; }
+  #CD_Text .IcImg { height: 24px; width: auto; vertical-align: -5px; margin: 0 2px; }
   #CD_Text .Tb { margin-top: 8px; padding: 8px 10px; background: rgba(240,168,42,.14); border-left: 4px solid #f0a82a; }
   #CD_Text .Tb b:first-child { color: #ffd54f; }
   #CD_Text .Face { margin: 6px 0 2px; color: var(--neon); font-weight: 900; }
@@ -1093,7 +1094,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0010";
+const APP_VERSION = "20261125-0050";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2463,12 +2464,14 @@ function Render_Deck() {
 // ---------- 카드 상세 정보 ----------
 // 효과 글은 cards/text.json (자동 업데이트가 공식 사이트에서 모아둔 것)을 처음 열 때 한 번 불러옴
 let CD_TEXT = null, CD_TEXT_STATE = "none";   // none / loading / ok / fail
+let CD_ICONS = {};                             // 키워드 이름 → 공식 아이콘 그림 (cards/icons/)
 function Load_CD_Text() {
   if (CD_TEXT_STATE === "loading" || CD_TEXT_STATE === "ok") return;
   CD_TEXT_STATE = "loading";
+  const icons = fetch("cards/icons.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).catch(() => ({}));
   fetch("cards/text.json", { cache: "no-cache" })
     .then(r => { if (!r.ok) throw 0; return r.json(); })
-    .then(j => { CD_TEXT = j; CD_TEXT_STATE = "ok"; if (CD.open) Render_CD(); })
+    .then(async j => { CD_ICONS = await icons; CD_TEXT = j; CD_TEXT_STATE = "ok"; if (CD.open) Render_CD(); })
     .catch(() => { CD_TEXT_STATE = "fail"; if (CD.open) Render_CD(); });
 }
 const ATTR_KEY = { "화염": "화", "대지": "대", "폭풍": "폭", "파도": "파", "번개": "번" };
@@ -2477,7 +2480,14 @@ function Effect_Html(raw) {
   if (raw == null) return "";
   if (raw.trim() === "-" || raw.trim() === "") return `<span class="Dim">효과 없음</span>`;
   const line = (t) => Esc(t)
-    .replace(/⟦([^⟧]*)⟧/g, (m, n) => `<span class="Ic${ATTR_KEY[n] ? " A-" + ATTR_KEY[n] : ""}">${n}</span>`)
+    .replace(/⟦([^⟧]*)⟧/g, (m, n) => {
+      const badge = `<span class="Ic${ATTR_KEY[n] ? " A-" + ATTR_KEY[n] : ""}">${n}</span>`;
+      const f = CD_ICONS[n.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')];
+      // 공식 아이콘 그림이 있으면 그림으로, 못 불러오면 글자 배지로
+      return f && /^[A-Za-z0-9_.-]+$/.test(f)
+        ? `<img class="IcImg" src="cards/icons/${f}" alt="${n}" onerror="this.outerHTML=this.dataset.b" data-b="${badge.replace(/"/g, "&quot;")}">`
+        : badge;
+    })
     .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
   let out = "", trig = [];
   const flush = () => { if (trig.length) { out += `<div class="Tb">${trig.join("<br>")}</div>`; trig = []; } };
