@@ -125,7 +125,13 @@
   .I_Txt { font-size: 17px; font-weight: 800; line-height: 1.45; }
   .I_Txt b { color: #ffd54f; }
   #I_Note { margin-top: 14px; font-size: 15px; font-weight: 700; color: var(--sub); text-align: center; line-height: 1.5; }
-  .I_Row { display: flex; justify-content: center; margin-top: 16px; }
+  .I_Row { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 16px; }
+  #I_Extra { display: flex; gap: 14px; }
+  #I_Extra:empty { display: none; }
+  .I_Sub2 { height: 52px; padding: 0 26px; font-size: 19px; font-weight: 900; color: var(--text); background: rgba(2,14,50,.85); border: 2px solid var(--neon); font-family: inherit; }
+  .I_Sub2:active { filter: brightness(1.4); }
+  #I_Sub b { color: #ffd54f; }
+  .I_Pic .Key.Big { font-size: 26px; padding: 4px 18px; }
   #I_Ok { height: 58px; padding: 0 64px; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
     clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
 
@@ -777,7 +783,7 @@
       <div id="I_Sub">추가하면 주소창 없이 앱처럼 전체 화면으로 쓸 수 있어요</div>
       <div class="I_Steps" id="I_Steps"></div>
       <div id="I_Note"></div>
-      <div class="I_Row"><button id="I_Ok">확인</button></div>
+      <div class="I_Row"><span id="I_Extra"></span><button id="I_Ok">확인</button></div>
     </div>
   </div>
 
@@ -1152,7 +1158,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0130";
+const APP_VERSION = "20261125-0140";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1192,39 +1198,98 @@ let INSTALL_EVT = null;   // 안드로이드 크롬이 주는 "앱 설치" 기�
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); INSTALL_EVT = e; Update_I_Btn(); });
 window.addEventListener("appinstalled", () => { INSTALL_EVT = null; document.getElementById("I_Btn").classList.remove("Show"); Show_Toast("홈 화면에 추가했어"); });
 function Update_I_Btn() { document.getElementById("I_Btn").classList.toggle("Show", !Is_App_Mode()); }
-function Device_Kind() {
+// 어떤 기기 · 어떤 브라우저로 열었는지 (안내를 브라우저마다 다르게 보여주기 위해)
+function Browser_Kind() {
   const ua = navigator.userAgent || "";
+  const ios = /iPhone|iPod|iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const ipad = /iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  if (ipad) return "ipad";
-  if (/iPhone|iPod/.test(ua)) return "iphone";
-  if (/Android/.test(ua)) return "android";
-  return "other";
+  const android = /Android/.test(ua);
+  let app = "";                                    // 다른 앱 안에서 열린 브라우저
+  if (/NAVER\(inapp|NAVER/.test(ua)) app = "네이버 앱";
+  else if (/KAKAOTALK/i.test(ua)) app = "카카오톡";
+  else if (/Instagram/.test(ua)) app = "인스타그램";
+  else if (/FBAN|FBAV/.test(ua)) app = "페이스북";
+  else if (/\bLine\//.test(ua)) app = "라인";
+  else if (/DaumApps/.test(ua)) app = "다음 앱";
+  else if (/; wv\)/.test(ua) && android) app = "다른 앱";
+  if (ios) return { os: "ios", ipad, app, br: app ? "inapp" : /CriOS/.test(ua) ? "chrome" : /EdgiOS|FxiOS|Whale/.test(ua) ? "other" : "safari" };
+  if (android) return { os: "android", app, br: app ? "inapp" : /SamsungBrowser/.test(ua) ? "samsung" : /Whale/.test(ua) ? "whale" : /EdgA|Firefox|OPR/.test(ua) ? "other" : "chrome" };
+  return { os: "pc", app: "", br: "pc" };
 }
 const I_SHARE = `<svg width="26" height="30" viewBox="0 0 24 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9H5v16h14V9h-3"/><path d="M12 2v15M7.5 6.5 12 2l4.5 4.5"/></svg>`, I_PLUS = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`;
+const SITE_URL = "https://nivel-neuron.github.io/";
 function Show_I_Guide() {
-  const k = Device_Kind();
+  const k = Browser_Kind();
   const step = (n, pic, txt) => `<div class="I_Step"><div class="I_Num">${n}</div><div class="I_Pic">${pic}</div><div class="I_Txt">${txt}</div></div>`;
-  let steps, note;
-  if (k === "iphone" || k === "ipad") {
-    steps = step(1, `<span class="Key Blue">${I_SHARE}</span>`, k === "iphone" ? `화면 <b>아래쪽</b> 가운데<br><b>공유 버튼</b>을 눌러요` : `주소창 <b>오른쪽 위</b><br><b>공유 버튼</b>을 눌러요`)
-          + step(2, `<span class="Key">${I_PLUS} 홈 화면에 추가</span>`, `메뉴를 내려서<br><b>홈 화면에 추가</b>를 눌러요`)
-          + step(3, `<span class="Key Blue">추가</span>`, `오른쪽 위<br><b>추가</b>를 눌러요`);
-    note = "사파리에서 열었을 때 가장 잘 돼요. 다른 앱 안에서 열렸다면 사파리로 열어 주세요.<br>다음부터는 홈 화면의 <b>니벨 뉴런</b> 아이콘으로 열면 돼요.";
-  } else if (k === "android") {
-    steps = step(1, `<span class="Key" style="font-size:26px;padding:4px 16px">⋮</span>`, `브라우저 <b>오른쪽 위</b><br><b>메뉴(⋮)</b>를 눌러요`)
-          + step(2, `<span class="Key">${I_PLUS} 앱 설치</span>`, `<b>앱 설치</b> 또는<br><b>홈 화면에 추가</b>를 눌러요`)
-          + step(3, `<span class="Key Blue">설치</span>`, `<b>설치</b>(또는 <b>추가</b>)를<br>눌러요`);
-    note = "삼성 인터넷은 아래쪽 메뉴(≡) → <b>현재 페이지 추가</b> → <b>홈 화면</b>이에요.<br>다음부터는 홈 화면의 <b>니벨 뉴런</b> 아이콘으로 열면 돼요.";
+  const key = (t, cls = "") => `<span class="Key ${cls}">${t}</span>`;
+  const done = "다음부터는 홈 화면의 <b>니벨 뉴런</b> 아이콘으로 열면 돼요.";
+  let title = "홈 화면에 추가", sub = "추가하면 주소창 없이 앱처럼 전체 화면으로 쓸 수 있어요", steps, note, extra = "";
+  if (k.br === "inapp") {
+    // 네이버 앱 · 카카오톡 같은 앱 안 브라우저 → 진짜 브라우저로 다시 열어야 전체 화면 설치가 확실함
+    const real = k.os === "ios" ? "사파리" : "크롬이나 삼성 인터넷";
+    const realRo = k.os === "ios" ? "사파리로" : "크롬이나 삼성 인터넷으로";   // 조사(로/으로) 맞춤
+    title = `${realRo} 열어 주세요`;
+    sub = `지금은 <b>${k.app}</b> 안에서 열려 있어요. ${real}에서 추가해야 주소창 없이 열려요`;
+    steps = step(1, key("⋯ ⋮", "Big"), `${k.app} 화면의<br><b>메뉴(⋯ 또는 ⋮)</b>를 눌러요`)
+          + step(2, key(k.os === "ios" ? "Safari로 열기" : "다른 브라우저로 열기"), `<b>${k.os === "ios" ? "Safari로 열기" : "다른 브라우저로 열기"}</b><br>(또는 기본 브라우저로 열기)`)
+          + step(3, key("📲 홈 화면에 추가"), `새로 열린 화면의<br>왼쪽 위 <b>홈 화면에 추가</b>`);
+    note = "메뉴에 그런 항목이 없으면 아래 <b>주소 복사</b>를 누르고, " + (k.os === "ios" ? "사파리를" : "크롬이나 삼성 인터넷을") + " 열어 주소창에 붙여 넣어 주세요.";
+    extra = `<button class="I_Sub2" id="I_Copy">주소 복사</button>` + (k.os === "android" ? `<button class="I_Sub2" id="I_Chrome">크롬으로 열기</button>` : "");
+  } else if (k.os === "ios" && k.br === "safari") {
+    steps = step(1, key(I_SHARE, "Blue"), k.ipad ? `주소창 <b>오른쪽 위</b><br><b>공유 버튼</b>을 눌러요` : `화면 <b>아래쪽</b> 가운데<br><b>공유 버튼</b>을 눌러요`)
+          + step(2, key(`${I_PLUS} 홈 화면에 추가`), `메뉴를 내려서<br><b>홈 화면에 추가</b>를 눌러요`)
+          + step(3, key("추가", "Blue"), `오른쪽 위<br><b>추가</b>를 눌러요`);
+    note = done;
+  } else if (k.os === "ios" && k.br === "chrome") {
+    steps = step(1, key(I_SHARE, "Blue"), `주소창 <b>오른쪽</b><br><b>공유 버튼</b>을 눌러요`)
+          + step(2, key(`${I_PLUS} 홈 화면에 추가`), `메뉴를 내려서<br><b>홈 화면에 추가</b>를 눌러요`)
+          + step(3, key("추가", "Blue"), `오른쪽 위<br><b>추가</b>를 눌러요`);
+    note = "아이폰 크롬은 iOS 16.4 이상에서 돼요. 메뉴에 없으면 <b>사파리</b>로 열어서 추가해 주세요.<br>" + done;
+    extra = `<button class="I_Sub2" id="I_Copy">주소 복사</button>`;
+  } else if (k.os === "android" && k.br === "samsung") {
+    steps = step(1, key("≡", "Big"), `화면 <b>오른쪽 아래</b><br><b>메뉴(≡)</b>를 눌러요`)
+          + step(2, key(`${I_PLUS} 현재 페이지 추가`), `<b>현재 페이지 추가</b>를<br>눌러요`)
+          + step(3, key("홈 화면 → 추가"), `<b>홈 화면</b>을 고르고<br><b>추가</b>를 눌러요`);
+    note = "메뉴가 위쪽에 있는 설정이라면 오른쪽 위 메뉴를 눌러 주세요.<br>" + done;
+  } else if (k.os === "android" && k.br === "whale") {
+    steps = step(1, key("⋯", "Big"), `웨일 <b>메뉴(⋯)</b>를<br>눌러요`)
+          + step(2, key(`${I_PLUS} 홈 화면에 추가`), `<b>홈 화면에 추가</b>를<br>눌러요`)
+          + step(3, key("추가", "Blue"), `<b>추가</b>를 눌러요`);
+    note = "웨일에서 주소창이 보이면 <b>크롬</b>이나 <b>삼성 인터넷</b>으로 열어서 추가해 주세요.<br>" + done;
+    extra = `<button class="I_Sub2" id="I_Chrome">크롬으로 열기</button>`;
+  } else if (k.os === "android") {
+    steps = step(1, key("⋮", "Big"), `화면 <b>오른쪽 위</b><br><b>메뉴(⋮)</b>를 눌러요`)
+          + step(2, key(`${I_PLUS} 앱 설치`), `<b>앱 설치</b> 또는<br><b>홈 화면에 추가</b>를 눌러요`)
+          + step(3, key("설치", "Blue"), `<b>설치</b>(또는 <b>추가</b>)를<br>눌러요`);
+    note = done;
   } else {
-    steps = step(1, `<span class="Key">📱</span>`, `휴대폰이나 태블릿으로<br>이 주소를 열어요`)
-          + step(2, `<span class="Key">${I_PLUS} 홈 화면에 추가</span>`, `브라우저 메뉴에서<br><b>홈 화면에 추가</b>`)
-          + step(3, `<span class="Key Blue">추가</span>`, `홈 화면의 아이콘으로<br>열어요`);
+    title = "휴대폰·태블릿에서 열어 주세요";
+    steps = step(1, key("📱", "Big"), `휴대폰이나 태블릿으로<br>QR코드를 찍어요`)
+          + step(2, key("📲 홈 화면에 추가"), `왼쪽 위<br><b>홈 화면에 추가</b>`)
+          + step(3, key("니벨 뉴런", "Blue"), `홈 화면의 아이콘으로<br>열어요`);
     note = "컴퓨터 크롬은 주소창 오른쪽의 <b>설치</b> 아이콘으로도 설치할 수 있어요.";
   }
+  document.querySelector("#I_Box h2").textContent = title;
+  document.getElementById("I_Sub").innerHTML = sub;
   document.getElementById("I_Steps").innerHTML = steps;
   document.getElementById("I_Note").innerHTML = note;
+  document.getElementById("I_Extra").innerHTML = extra;
   document.getElementById("I_Dim").classList.add("Show");
 }
+document.getElementById("I_Extra").addEventListener("click", async (e) => {
+  if (e.target.id === "I_Copy") {
+    try { await navigator.clipboard.writeText(SITE_URL); Show_Toast("주소를 복사했어"); }
+    catch (err) {
+      const t = document.createElement("textarea"); t.value = SITE_URL; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); Show_Toast("주소를 복사했어"); } catch (e2) { Show_Toast(SITE_URL); }
+      t.remove();
+    }
+  }
+  if (e.target.id === "I_Chrome") {
+    // 안드로이드: 크롬으로 이 주소 열기 (크롬이 없으면 기본 브라우저)
+    location.href = "intent://nivel-neuron.github.io/#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(SITE_URL) + ";end";
+  }
+});
 document.getElementById("I_Btn").addEventListener("click", async () => {
   if (INSTALL_EVT) {             // 안드로이드 크롬: 바로 "앱 설치" 확인창
     const e = INSTALL_EVT; INSTALL_EVT = null;
