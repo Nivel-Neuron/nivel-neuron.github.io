@@ -364,9 +364,9 @@
   .D_Layer { position: absolute; inset: 0; z-index: 16; display: none; align-items: center; justify-content: center; background: rgba(0, 6, 25, .72); }
   .D_Layer.Show { display: flex; }
   /* 덱 이름: 평소엔 제목처럼, 누르면 바꾸기 */
-  #D_NameBtn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; margin-left: 4px; padding: 6px 10px; background: none; border: none;
+  #D_NameBtn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; margin-left: 4px; padding: 6px 10px; background: none; border: none;
     color: var(--text); font-family: inherit; font-size: 28px; font-weight: 900; font-style: italic; text-align: left; text-shadow: 0 0 12px rgba(79,227,255,.45); }
-  #D_NameTxt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  #D_NameTxt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-right: 8px; }   /* 기울임 글자 끝이 연필에 닿지 않게 */
   #D_NameTxt.Auto { color: #cfe3ff; }
   #D_NameBtn i { flex-shrink: 0; font-style: normal; font-size: 20px; color: var(--neon); opacity: .85; }
   #D_NameBtn:active { filter: brightness(1.4); }
@@ -1110,7 +1110,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0105";
+const APP_VERSION = "20261125-0110";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
