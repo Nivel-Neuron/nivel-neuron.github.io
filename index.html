@@ -123,6 +123,72 @@
   #N_Ok { height: 58px; padding: 0 54px; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
     clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); }
 
+
+  /* ================= 카드 상세 정보 ================= */
+  #CD { position: absolute; inset: 0; z-index: 18; display: none; flex-direction: column;
+    background: linear-gradient(180deg, rgba(2,10,36,.95), rgba(3,16,52,.97)), url("bg.jpg") center / cover no-repeat, #041a4a; }
+  #CD.Show { display: flex; }
+  .CD_Top { position: relative; height: 74px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid rgba(79,227,255,.35); }
+  #CD_Back { position: absolute; left: 22px; top: 8px; width: 60px; height: 58px; display: grid; place-items: center; color: var(--neon); font-size: 36px; font-weight: 900; line-height: 1;
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); background: linear-gradient(#1b5fd6, #0a2c7a); box-shadow: inset 0 0 0 2px var(--neon); border: none; }
+  .CD_Ttl { padding: 8px 34px; font-size: 24px; font-weight: 900; border-radius: 30px; background: rgba(2,10,36,.8); border: 1px solid rgba(79,227,255,.35); }
+  .CD_Body { flex: 1; min-height: 0; display: flex; gap: 26px; padding: 18px 70px 12px; position: relative; }
+  .CD_Arr { position: absolute; top: 42%; width: 50px; height: 70px; display: grid; place-items: center; font-size: 56px; font-weight: 200; color: var(--neon);
+    text-shadow: 0 0 12px var(--neon); background: none; border: none; font-family: inherit; }
+  .CD_Arr:disabled { opacity: .15; }
+  #CD_Prev { left: 12px; } #CD_Next { right: 12px; }
+  .CD_Left { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .CD_Img { position: relative; }
+  .CD_Img img { width: 100%; display: block; border-radius: 8px; box-shadow: 0 0 0 3px rgba(79,227,255,.35), 0 0 24px rgba(79,227,255,.25); }
+  .CD_Img .NC { width: 100%; aspect-ratio: 63 / 88; }
+  .CD_Img .NC .Nm { font-size: 18px; min-height: 60px; }
+  .CD_Img .NC .Co { font-size: 26px; height: 40px; min-width: 36px; }
+  .CD_Img.Lead img, .CD_Img.Lead .NC { aspect-ratio: auto; }
+  .CD_Lm { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 4px 8px; font-size: 19px; font-weight: 900; color: #fff; border-radius: 4px; text-align: center; }
+  .CD_Lm small { font-size: 14px; font-weight: 800; opacity: .92; }
+  .CD_Lm.Ban { background: #d6223a; } .CD_Lm.L1 { background: #d9661a; } .CD_Lm.L2 { background: #f3b04a; color: #3a1e00; }
+  .CD_Lm.Pair { background: #8a3bd6; flex-direction: column; gap: 2px; font-size: 17px; }
+  .CD_Right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .CD_Nm { padding: 8px 16px; font-size: 28px; font-weight: 900; background: linear-gradient(90deg, rgba(29,95,208,.55), rgba(8,36,110,.3)); border: 1px solid rgba(79,227,255,.45);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .CD_Nm small { font-size: 15px; color: var(--sub); margin-left: 12px; font-weight: 800; }
+  .CD_Grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .CD_St { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; padding: 0 14px; font-size: 19px; font-weight: 900;
+    background: rgba(12,52,136,.55); border: 1px solid rgba(79,227,255,.25); white-space: nowrap; overflow: hidden; }
+  .CD_St b { color: var(--sub); font-size: 15px; flex-shrink: 0; }
+  .CD_St.Wide { grid-column: 1 / -1; justify-content: flex-start; gap: 16px; }
+  .CD_St.At-화 { background: linear-gradient(90deg, #c8364a, rgba(12,52,136,.55)); } .CD_St.At-대 { background: linear-gradient(90deg, #1f9d6b, rgba(12,52,136,.55)); }
+  .CD_St.At-폭 { background: linear-gradient(90deg, #7b46c8, rgba(12,52,136,.55)); } .CD_St.At-파 { background: linear-gradient(90deg, #2a72c8, rgba(12,52,136,.55)); }
+  .CD_St.At-번 { background: linear-gradient(90deg, #b8901c, rgba(12,52,136,.55)); }
+  .CD_St.Trg { background: linear-gradient(90deg, #f0a82a, rgba(12,52,136,.55)); }
+  .CD_St.Trg b, .CD_St[class*="At-"] b { color: #fff; opacity: .85; }
+  .CD_Eff { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 2px solid rgba(79,227,255,.55); background: rgba(2,10,36,.72); }
+  .CD_Eff h3 { margin: 0; padding: 8px 14px 6px; font-size: 20px; font-weight: 900; border-bottom: 2px solid #2a8cff; flex-shrink: 0; }
+  #CD_Text { padding: 10px 14px; font-size: 18px; line-height: 1.6; font-weight: 600; overflow-y: auto; -webkit-overflow-scrolling: touch; word-break: keep-all; overflow-wrap: anywhere; }
+  #CD_Text .Ic { display: inline-block; padding: 0 7px; margin: 0 2px; border-radius: 4px; font-size: 14px; font-weight: 900; line-height: 22px; background: #1d4f8a; border: 1px solid #6fc8ff; vertical-align: 1px; }
+  #CD_Text .Ic.A-화 { background: #c8364a; border-color: #ff8d9b; } #CD_Text .Ic.A-대 { background: #1f9d6b; border-color: #5dffb0; }
+  #CD_Text .Ic.A-폭 { background: #7b46c8; border-color: #c79bff; } #CD_Text .Ic.A-파 { background: #2a72c8; border-color: #6fc8ff; }
+  #CD_Text .Ic.A-번 { background: #b8901c; border-color: #ffe27a; }
+  #CD_Text .Tb { margin-top: 8px; padding: 8px 10px; background: rgba(240,168,42,.14); border-left: 4px solid #f0a82a; }
+  #CD_Text .Tb b:first-child { color: #ffd54f; }
+  #CD_Text .Face { margin: 6px 0 2px; color: var(--neon); font-weight: 900; }
+  #CD_Text .Face:first-child { margin-top: 0; }
+  #CD_Text .Dim { color: var(--sub); }
+  .CD_Bot { height: 108px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 90px; border-top: 2px solid rgba(79,227,255,.35); background: rgba(2,10,36,.6); }
+  .CD_Bot.Hide { display: none; }
+  .CD_Hb { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 18px; font-weight: 900; color: var(--text); background: none; border: none; font-family: inherit; }
+  .CD_Hb .Hx { width: 76px; height: 70px; display: grid; place-items: center; font-size: 42px; font-weight: 900; color: var(--neon);
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); background: linear-gradient(#1b5fd6, #0a2c7a); box-shadow: inset 0 0 0 2px var(--neon); }
+  .CD_Hb:active .Hx { filter: brightness(1.4); }
+  .CD_Hb:disabled { opacity: .3; }
+  .CD_Cnt { display: flex; flex-direction: column; align-items: center; }
+  .CD_Cnt small { font-size: 15px; font-weight: 900; color: var(--sub); padding: 2px 16px; border-radius: 12px; background: rgba(2,10,36,.8); }
+  .CD_Cnt b { font-size: 36px; font-weight: 900; padding: 2px 30px; border: 1px solid rgba(79,227,255,.45); background: rgba(12,52,136,.55); }
+  .CD_Cnt b.Full { color: var(--warn); }
+  #CD_Lead { height: 64px; padding: 0 44px; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
+  #CD_Lead:disabled { opacity: .5; }
+
   /* ================= 리미트 레귤레이션 ================= */
   #LimitView {
     position: absolute; inset: 0; z-index: 12; display: none; flex-direction: column; gap: 10px;
@@ -588,7 +654,7 @@
       </div>
     </div>
 
-    <div class="D_MainHead"><div class="D_Lab" id="D_MainLab">MAIN · 0장</div><div class="D_Lab" style="letter-spacing:1px">카드를 누르면 1장 빼기 · 코스트 순 정렬</div></div>
+    <div class="D_MainHead"><div class="D_Lab" id="D_MainLab">MAIN · 0장</div><div class="D_Lab" style="letter-spacing:1px">카드를 누르면 상세 정보 · 코스트 순 정렬</div></div>
     <div id="D_MainGrid"></div>
 
     <div class="D_Bottom">
@@ -608,7 +674,7 @@
       <div class="P_Body">
         <div class="P_Filters" id="P_Filters"></div>
         <div class="P_Right">
-          <div class="P_Info"><span id="P_Count">0장</span><span>카드를 누르면 1장 추가 · 흐린 카드는 넣을 수 없는 카드</span></div>
+          <div class="P_Info"><span id="P_Count">0장</span><span>카드를 누르면 상세 정보 · 흐린 카드는 넣을 수 없는 카드</span></div>
           <div id="P_Grid"></div>
         </div>
       </div>
@@ -630,6 +696,27 @@
         <p id="DC_Text"></p>
         <div class="D_Row"><button id="DC_Yes">예</button><button class="Red" id="DC_No">아니오</button></div>
       </div>
+    </div>
+  </section>
+
+
+  <!-- ================= 카드 상세 정보 ================= -->
+  <section id="CD">
+    <div class="CD_Top"><button id="CD_Back">‹</button><div class="CD_Ttl">카드 상세 정보</div></div>
+    <div class="CD_Body">
+      <button class="CD_Arr" id="CD_Prev">‹</button><button class="CD_Arr" id="CD_Next">›</button>
+      <div class="CD_Left"><div class="CD_Img" id="CD_Img"></div><div id="CD_Lms"></div></div>
+      <div class="CD_Right">
+        <div class="CD_Nm" id="CD_Nm"></div>
+        <div class="CD_Grid" id="CD_Grid"></div>
+        <div class="CD_Eff"><h3>카드 효과</h3><div id="CD_Text"></div></div>
+      </div>
+    </div>
+    <div class="CD_Bot" id="CD_Bot">
+      <button class="CD_Hb" id="CD_Minus"><div class="Hx">−</div>해제</button>
+      <div class="CD_Cnt"><small id="CD_CntLab">메인</small><b id="CD_Cnt">0/3</b></div>
+      <button class="CD_Hb" id="CD_Plus"><div class="Hx">+</div>추가</button>
+      <button id="CD_Lead">리더로 선택</button>
     </div>
   </section>
 
@@ -1006,7 +1093,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261124-2255";
+const APP_VERSION = "20261124-2330";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2372,8 +2459,135 @@ function Render_Deck() {
   grid.style.gridTemplateRows = `repeat(${Math.max(3, Math.ceil(cap / 11))}, 1fr)`;
 }
 
-document.getElementById("D_TrigRow").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Remove_Card(b.dataset.id); });
-document.getElementById("D_MainGrid").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Remove_Card(b.dataset.id); });
+
+// ---------- 카드 상세 정보 ----------
+// 효과 글은 cards/text.json (자동 업데이트가 공식 사이트에서 모아둔 것)을 처음 열 때 한 번 불러옴
+let CD_TEXT = null, CD_TEXT_STATE = "none";   // none / loading / ok / fail
+function Load_CD_Text() {
+  if (CD_TEXT_STATE === "loading" || CD_TEXT_STATE === "ok") return;
+  CD_TEXT_STATE = "loading";
+  fetch("cards/text.json", { cache: "no-cache" })
+    .then(r => { if (!r.ok) throw 0; return r.json(); })
+    .then(j => { CD_TEXT = j; CD_TEXT_STATE = "ok"; if (CD.open) Render_CD(); })
+    .catch(() => { CD_TEXT_STATE = "fail"; if (CD.open) Render_CD(); });
+}
+const ATTR_KEY = { "화염": "화", "대지": "대", "폭풍": "폭", "파도": "파", "번개": "번" };
+// ⟦아이콘⟧ → 배지, **굵게**, 줄 앞 "@T " → 트리거 칸 (글자는 모두 Esc 처리해서 코드로 실행되지 않음)
+function Effect_Html(raw) {
+  if (raw == null) return "";
+  if (raw.trim() === "-" || raw.trim() === "") return `<span class="Dim">효과 없음</span>`;
+  const line = (t) => Esc(t)
+    .replace(/⟦([^⟧]*)⟧/g, (m, n) => `<span class="Ic${ATTR_KEY[n] ? " A-" + ATTR_KEY[n] : ""}">${n}</span>`)
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  let out = "", trig = [];
+  const flush = () => { if (trig.length) { out += `<div class="Tb">${trig.join("<br>")}</div>`; trig = []; } };
+  raw.split("\n").forEach(l => {
+    if (l.startsWith("@T ")) { trig.push(line(l.slice(3))); return; }
+    flush();
+    const face = l.match(/^\*\*(기본면|각성면)\*\*$/);
+    out += face ? `<div class="Face">◆ ${face[1]}</div>` : line(l) + "<br>";
+  });
+  flush();
+  return out;
+}
+
+const CD = { open: false, id: null, list: [], mode: "deck" };   // mode: deck(추가/해제) / view(보기만)
+function Open_CD(id, list, mode) {
+  CD.open = true; CD.id = id; CD.list = list && list.length ? list : [id]; CD.mode = mode || "deck";
+  document.getElementById("CD").classList.add("Show");
+  Load_CD_Text(); Render_CD();
+  document.getElementById("CD_Text").scrollTop = 0;
+}
+function Close_CD() { CD.open = false; document.getElementById("CD").classList.remove("Show"); }
+function Render_CD() {
+  const c = CARD_BY_ID[CD.id]; if (!c) { Close_CD(); return; }
+  const lead = c.ty === "리";
+  // 이미지 (없으면 글자 카드)
+  const box = document.getElementById("CD_Img");
+  box.classList.toggle("Lead", lead);
+  box.innerHTML = IMG_FAIL.has(c.id) ? Tile(c, { lead })
+    : `<img src="${Card_Img(c.id)}" alt="" onload="IMG_OK.add('${c.id}')" onerror="IMG_FAIL.add('${c.id}');this.outerHTML=Tile(CARD_BY_ID['${c.id}'],{lead:${lead}})">`;
+  // 금제 줄 (금지 빨강 · 제한 짙은 주황 · 준제한 옅은 주황 · 금지 페어 보라 + 상대 카드 이름)
+  let lm = "";
+  if (!lead) {
+    const mx = Max_Copies(c.id);
+    if (mx === 0) lm += `<div class="CD_Lm Ban">🚫 금지 <small>덱에 넣을 수 없음</small></div>`;
+    else if (mx === 1) lm += `<div class="CD_Lm L1">제한 <small>1장까지</small></div>`;
+    else if (mx === 2) lm += `<div class="CD_Lm L2">준제한 <small>2장까지</small></div>`;
+  }
+  const pp = Pair_Partners(c.id);
+  if (pp.length) lm += `<div class="CD_Lm Pair"><span>금지 페어 <small>같이 넣을 수 없음</small></span>${pp.map(p => `<small>${Esc(CARD_BY_ID[p] ? CARD_BY_ID[p].n : p)}</small>`).join("")}</div>`;
+  const lms = document.getElementById("CD_Lms"); lms.innerHTML = lm; lms.style.display = lm ? "flex" : "none";
+  lms.style.flexDirection = "column"; lms.style.gap = "6px";
+  // 이름 · 수치
+  document.getElementById("CD_Nm").innerHTML = `${Esc(c.n)}<small>${c.id}</small>`;
+  const TY = { "리": "리더", "유": "유닛", "스": "스킬", "아": "아이템" };
+  const st = (lab, v, cls = "") => `<div class="CD_St ${cls}"><b>${lab}</b>${v ?? "-"}</div>`;
+  let g = st("속성", ATTR_NAME[c.at], "At-" + c.at) + st("종류", TY[c.ty]);
+  if (lead) {
+    g += st("각성", c.aw != null ? "Lv " + c.aw : "-");
+    g += st("서약", c.vt === "O" ? `[${ATTR_NAME[c.vc]}] 카드만` : `[${ATTR_NAME[c.vc]}] 필수 + 1속성`, "Wide");
+  } else {
+    g += st("트리거", c.tr ? "있음" : "없음", c.tr ? "Trg" : "");
+    g += st("코스트", c.c) + st("파워", c.p) + st("히트", c.h);
+  }
+  g += st("IP", IP_NAMES[c.ip] || "기타", "Wide");
+  document.getElementById("CD_Grid").innerHTML = g;
+  // 효과 글
+  const tx = document.getElementById("CD_Text");
+  if (CD_TEXT_STATE === "ok") tx.innerHTML = CD_TEXT[c.id] != null ? Effect_Html(CD_TEXT[c.id]) : `<span class="Dim">아직 효과 글이 없는 카드야. 자동 업데이트 때 채워져.</span>`;
+  else if (CD_TEXT_STATE === "fail") tx.innerHTML = `<span class="Dim">효과 글을 불러오지 못했어. 인터넷 연결을 확인해줘.</span>`;
+  else tx.innerHTML = `<span class="Dim">효과 글 불러오는 중…</span>`;
+  // 이전 · 다음
+  const i = CD.list.indexOf(c.id);
+  document.getElementById("CD_Prev").disabled = i <= 0;
+  document.getElementById("CD_Next").disabled = i < 0 || i >= CD.list.length - 1;
+  // 아래쪽: 해제 / 장수 / 추가 (리더는 "리더로 선택")
+  const bot = document.getElementById("CD_Bot");
+  bot.classList.toggle("Hide", CD.mode !== "deck");
+  if (CD.mode === "deck") {
+    const minus = document.getElementById("CD_Minus"), plus = document.getElementById("CD_Plus"), lb = document.getElementById("CD_Lead");
+    const cnt = document.getElementById("CD_Cnt");
+    minus.style.display = plus.style.display = lead ? "none" : "";
+    lb.style.display = lead ? "" : "none";
+    if (lead) {
+      const sel = deck.leader === c.id;
+      document.getElementById("CD_CntLab").textContent = "리더";
+      cnt.textContent = sel ? "선택됨" : "-"; cnt.classList.toggle("Full", sel);
+      lb.disabled = sel; lb.textContent = sel ? "선택된 리더" : "리더로 선택";
+    } else {
+      const n = deck.cards[c.id] || 0, mx = Max_Copies(c.id);
+      document.getElementById("CD_CntLab").textContent = c.tr ? "트리거" : "메인";
+      cnt.textContent = `${n}/${mx}`; cnt.classList.toggle("Full", n >= mx);
+      minus.disabled = n <= 0;
+      plus.disabled = !Can_Add(c).ok;
+    }
+  }
+}
+document.getElementById("CD_Back").addEventListener("click", Close_CD);
+document.getElementById("CD_Prev").addEventListener("click", () => { const i = CD.list.indexOf(CD.id); if (i > 0) { CD.id = CD.list[i - 1]; Render_CD(); document.getElementById("CD_Text").scrollTop = 0; } });
+document.getElementById("CD_Next").addEventListener("click", () => { const i = CD.list.indexOf(CD.id); if (i >= 0 && i < CD.list.length - 1) { CD.id = CD.list[i + 1]; Render_CD(); document.getElementById("CD_Text").scrollTop = 0; } });
+document.getElementById("CD_Plus").addEventListener("click", () => {
+  const c = CARD_BY_ID[CD.id]; const r = Can_Add(c);
+  if (!r.ok) { Show_Toast(r.why); return; }
+  Add_Card(c); Show_Toast(`${c.n} 1장 넣었어`); Render_CD();
+});
+document.getElementById("CD_Minus").addEventListener("click", () => { Remove_Card(CD.id); Render_CD(); });
+document.getElementById("CD_Lead").addEventListener("click", () => {
+  const c = CARD_BY_ID[CD.id];
+  Close_CD();                       // 리더 변경 확인창이 덱 화면에 뜨기 때문에 먼저 닫음
+  Try_Set_Leader(c);
+  if (deck.leader === c.id && PF.type.has("리") && PF.type.size === 1) { PF.type = new Set(); Build_Filters(); Render_Picker(); }
+});
+function Deck_Card_List() {
+  const seen = new Set(), out = [];
+  [...Sorted_Expanded(c => c.tr), ...Sorted_Expanded(c => !c.tr)].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); out.push(c.id); } });
+  return out;
+}
+
+// 덱 화면에서 카드를 누르면 카드 상세 정보
+document.getElementById("D_TrigRow").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Open_CD(b.dataset.id, Deck_Card_List(), "deck"); });
+document.getElementById("D_MainGrid").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Open_CD(b.dataset.id, Deck_Card_List(), "deck"); });
 document.getElementById("D_Leader").addEventListener("click", () => Open_Picker(true));
 
 // ---------- 카드 추가 창 ----------
@@ -2443,6 +2657,7 @@ function Fit_Picker_Rows() {
   g.style.gridAutoRows = Math.round(col * 88 / 63) + "px";
 }
 window.addEventListener("resize", () => { if (Picker_Open()) Fit_Picker_Rows(); });
+let PICK_LIST = [];
 function Render_Picker() {
   Fit_Picker_Rows();
   const total = Deck_Total(), trig = Deck_Trig();
@@ -2450,6 +2665,7 @@ function Render_Picker() {
   setPill(document.getElementById("P_CntDeck"), "덱", total, DECK_SIZE);
   setPill(document.getElementById("P_CntTrig"), "트리거", trig, MAX_TRIG);
   const list = CARDS.filter(Match).sort((a, b) => (b.ty === "리") - (a.ty === "리") || (a.c ?? -1) - (b.c ?? -1) || a.order - b.order);
+  PICK_LIST = list.map(c => c.id);
   document.getElementById("P_Count").textContent = `${list.length}장`;
   const grid = document.getElementById("P_Grid");
   if (!list.length) { grid.innerHTML = `<div class="P_Empty">조건에 맞는 카드가 없어</div>`; return; }
@@ -2460,9 +2676,7 @@ function Render_Picker() {
 }
 document.getElementById("P_Grid").addEventListener("click", (e) => {
   const b = e.target.closest(".NC[data-id]"); if (!b) return;
-  const c = CARD_BY_ID[b.dataset.id];
-  Add_Card(c);
-  if (c.ty === "리" && deck.leader === c.id && PF.type.has("리") && PF.type.size === 1) { PF.type = new Set(); Build_Filters(); Render_Picker(); }
+  Open_CD(b.dataset.id, PICK_LIST, "deck");     // 카드를 누르면 카드 상세 정보 (추가/해제는 그 창에서)
 });
 
 // ---------- 저장 · 덱 목록 · 초기화 ----------
