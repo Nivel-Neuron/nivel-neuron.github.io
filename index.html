@@ -1093,7 +1093,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261124-2330";
+const APP_VERSION = "20261124-2355";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2591,7 +2591,7 @@ document.getElementById("D_MainGrid").addEventListener("click", (e) => { const b
 document.getElementById("D_Leader").addEventListener("click", () => Open_Picker(true));
 
 // ---------- 카드 추가 창 ----------
-const PF = { q: "", type: new Set(), at: new Set(), cost: new Set(), pow: new Set(), hit: new Set(), trig: "all", ip: new Set(), only: true };
+const PF = { q: "", type: new Set(), at: new Set(), cost: new Set(), pow: new Set(), hit: new Set(), trig: "all", ip: new Set(), lim: new Set(), only: true };
 const POW_RANGES = [["~2000", 0, 2000], ["2500~4000", 2500, 4000], ["4500~6000", 4500, 6000], ["6500~8000", 6500, 8000], ["8500~", 8500, 99999]];
 const COST_KEYS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9+"];
 
@@ -2622,7 +2622,8 @@ function Build_Filters() {
     g("파워", "pow", POW_RANGES.map(([l], i) => [String(i), l])) +
     g("히트", "hit", [["1", "1"], ["2", "2"], ["3", "3"]]) +
     g("속성", "at", Object.entries(ATTR_NAME).map(([k, v]) => [k, v])) +
-    g("IP", "ip", IP_SHORT.slice(0, 6).map((n, i) => [String(i), n]));
+    g("IP", "ip", IP_SHORT.slice(0, 6).map((n, i) => [String(i), n])) +
+    g("금제", "lim", [["0", "금지"], ["1", "제한"], ["2", "준제한"]]);     // 여러 개 동시 선택 가능, 아무것도 안 고르면 전체
 }
 document.getElementById("P_Filters").addEventListener("click", (e) => {
   const b = e.target.closest(".P_Chip"); if (!b) return;
@@ -2638,6 +2639,7 @@ function Match(c) {
   if (PF.type.size && !PF.type.has(c.ty)) return false;
   if (PF.at.size && !PF.at.has(c.at)) return false;
   if (PF.ip.size && !PF.ip.has(String(c.ip))) return false;
+  if (PF.lim.size) { if (c.ty === "리") return false; const mx = Max_Copies(c.id); if (mx >= 3 || !PF.lim.has(String(mx))) return false; }
   if (PF.trig === "y" && !c.tr) return false;
   if (PF.trig === "n" && c.tr) return false;
   if (PF.cost.size) { if (c.c == null) return false; const k = c.c >= 9 ? "9+" : String(c.c); if (!PF.cost.has(k)) return false; }
