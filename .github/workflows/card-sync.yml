@@ -49,6 +49,7 @@ jobs:
           INDEX = os.path.join(ROOT, "index.html")
           IMG_DIR = os.path.join(ROOT, "cards")
           MAP_FILE = os.path.join(IMG_DIR, "wr_map.json")
+          TEXT_FILE = os.path.join(IMG_DIR, "text.json")                 # 카드 효과 글
           MAX_NEW = int(os.environ.get("MAX_NEW") or 0)        # 0 = 제한 없음 (시험할 때만 숫자)
           IMG_MAX = 260                                         # 이미지 긴 변 크기(px)
           LEADER_IMG_MAX = 400                                  # 리더 이미지 긴 변 크기(px) - 가로로 크게 보여서 조금 크게
@@ -87,6 +88,29 @@ jobs:
               s = s.replace(",", "").strip()
               return s if re.fullmatch(r"\d+", s) else ""
 
+          # 효과 글 HTML → 앱에서 안전하게 그릴 수 있는 글자 형식
+          #   ⟦아이콘 이름⟧ = 아이콘(그림) 자리, **굵게**, 줄바꿈 = 줄 나눔, 줄 맨 앞 "@T " = 트리거 칸
+          def effect_text(content):
+              t = content.replace("\r", "")
+              t = re.sub(r"<p[^>]*triger_box[^>]*>", "\n@T ", t)
+              t = re.sub(r"</p\s*>", "\n@E\n", t)
+              t = re.sub(r"<br\s*/?>", "\n", t)
+              t = re.sub(r"<img[^>]*?alt=['\"]([^'\"]*)['\"][^>]*>", lambda m: "⟦" + m.group(1).strip() + "⟧" if m.group(1).strip() else "", t)
+              t = re.sub(r"<b[^>]*>(.*?)</b\s*>", lambda m: "**" + m.group(1) + "**" if m.group(1).strip() else m.group(1), t, flags=re.S)
+              t = re.sub(r"<[^>]+>", "", t)
+              t = html.unescape(t).replace("\xa0", " ")
+              lines, trig = [], False
+              for ln in t.split("\n"):
+                  ln = re.sub(r"[ \t]+", " ", ln).strip()
+                  if ln == "@E":
+                      trig = False; continue
+                  if ln.startswith("@T"):
+                      trig = True; ln = ln[2:].strip()
+                  if not ln: continue
+                  if trig: ln = "@T " + ln                      # 트리거 칸 안의 줄
+                  lines.append(ln)
+              return "\n".join(lines)
+
           # 카드 상세 페이지 → 앱 데이터 한 줄
           def parse_detail(page):
               subj = re.search(r"<h2\s+id=['\"]subject['\"]>(.*?)</h[1-6]>", page, re.S)
@@ -117,7 +141,7 @@ jobs:
                   line = f"{cid}|{name}|리|{at}||||0|{ip}|{aw.group(1) if aw else ''}|{vt}|{vc}"
               else:
                   line = f"{cid}|{name}|{ty}|{at}|{num(cell(page, '코스트'))}|{num(cell(page, '파워'))}|{num(cell(page, '히트'))}|{tr}|{ip}"
-              return cid, line, img_url
+              return cid, line, img_url, effect_text(content)
 
           # 카드 목록 한 페이지 → 게시글 번호들
           def list_page(n):
@@ -159,6 +183,7 @@ jobs:
               data = {l.split("|")[0]: l for l in m.group(1).strip().split("\n") if l.strip()}
               os.makedirs(IMG_DIR, exist_ok=True)
               wr_map = json.load(open(MAP_FILE, encoding="utf-8")) if os.path.exists(MAP_FILE) else {}
+              texts = json.load(open(TEXT_FILE, encoding="utf-8")) if os.path.exists(TEXT_FILE) else {}
 
               # 1) 목록에서 게시글 번호 모으기 (최신 글부터, 전부 아는 글인 페이지가 나오면 멈춤)
               all_wr, n = [], 1
@@ -190,12 +215,34 @@ jobs:
                           break
                       continue
                   streak = 0
-                  cid, line, img_url = r
+                  cid, line, img_url, text = r
                   wr_map[str(wr)] = [cid, img_url]
+                  if cid not in texts and text: texts[cid] = text
                   if cid not in data:
                       data[cid] = line; added.append(line)
                   elif data[cid] != line and line not in mismatch:
                       mismatch.append(f"{data[cid]}  ⇢  {line}")
+
+              # 2-2) 효과 글이 아직 없는 카드는 (같은 카드 중 번호가 가장 작은) 게시글을 다시 읽어서 효과 글만 채움
+              first_wr = {}
+              for wr in sorted(wr_map, key=int):
+                  cid = wr_map[wr][0]
+                  if cid not in first_wr: first_wr[cid] = wr
+              need = [(cid, wr) for cid, wr in sorted(first_wr.items()) if cid not in texts]
+              if MAX_NEW: need = need[:MAX_NEW]
+              got_text, streak = 0, 0
+              for cid, wr in need:
+                  try:
+                      r = parse_detail(get(f"{BASE}/bbs/board.php?bo_table=cardlists&wr_id={wr}"))
+                  except Exception:
+                      r = None
+                  if r and r[0] == cid:
+                      texts[cid] = r[3]; got_text += 1; streak = 0
+                  else:
+                      streak += 1; log(f"  효과 글 실패: {cid} (게시글 {wr})")
+                      if streak >= 3:
+                          log("  연속 3번 실패해서 효과 글 수집은 여기서 멈춤"); break
+              log(f"효과 글 {got_text}장 새로 저장 · 전체 {len(texts)}장")
 
               # 3) 이미지 없는 카드 이미지 받기 (같은 카드는 번호가 가장 작은 게시글 이미지)
               first = {}
@@ -214,6 +261,7 @@ jobs:
                   except Exception as e: log(f"  이미지 실패: {cid}")
 
               # 4) 저장
+              open(TEXT_FILE, "w", encoding="utf-8").write("{\n" + ",\n".join(json.dumps(k) + ": " + json.dumps(v, ensure_ascii=False) for k, v in sorted(texts.items())) + "\n}\n")
               open(MAP_FILE, "w", encoding="utf-8").write("{\n" + ",\n".join(json.dumps(k) + ": " + json.dumps(v, ensure_ascii=False) for k, v in sorted(wr_map.items(), key=lambda kv: int(kv[0]))) + "\n}\n")
               if added:
                   body = "\n".join(data[k] for k in sorted(data)).replace("`", "'").replace("${", "$ {")
