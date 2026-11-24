@@ -50,6 +50,8 @@ jobs:
           IMG_DIR = os.path.join(ROOT, "cards")
           MAP_FILE = os.path.join(IMG_DIR, "wr_map.json")
           TEXT_FILE = os.path.join(IMG_DIR, "text.json")                 # 카드 효과 글
+          ICON_DIR = os.path.join(IMG_DIR, "icons")                      # 효과 글 속 키워드 아이콘 그림 (공식 사이트 그대로)
+          ICON_FILE = os.path.join(IMG_DIR, "icons.json")                # 아이콘 이름 → 그림 파일
           MAX_NEW = int(os.environ.get("MAX_NEW") or 0)        # 0 = 제한 없음 (시험할 때만 숫자)
           IMG_MAX = 260                                         # 이미지 긴 변 크기(px)
           LEADER_IMG_MAX = 400                                  # 리더 이미지 긴 변 크기(px) - 가로로 크게 보여서 조금 크게
@@ -141,7 +143,7 @@ jobs:
                   line = f"{cid}|{name}|리|{at}||||0|{ip}|{aw.group(1) if aw else ''}|{vt}|{vc}"
               else:
                   line = f"{cid}|{name}|{ty}|{at}|{num(cell(page, '코스트'))}|{num(cell(page, '파워'))}|{num(cell(page, '히트'))}|{tr}|{ip}"
-              return cid, line, img_url, effect_text(content)
+              return cid, line, img_url, effect_text(content), content
 
           # 카드 목록 한 페이지 → 게시글 번호들
           def list_page(n):
@@ -166,6 +168,28 @@ jobs:
                   else: break
               return top
 
+          # 효과 글 속 아이콘 그림 모으기 (처음 보는 아이콘 이름만 받음)
+          def collect_icons(content, icons):
+              added = 0
+              for tag in re.findall(r"<img[^>]*>", content):
+                  a = re.search(r"alt=['\"]([^'\"]*)['\"]", tag)
+                  sm = re.search(r"\ssrc=['\"]([^'\"]+)['\"]", tag)
+                  if not a or not sm: continue
+                  alt, src = a.group(1).strip(), sm.group(1).strip()
+                  if not alt or alt in icons: continue
+                  if src.startswith("../"): src = "/" + src[3:]
+                  url = src if src.startswith("http") else BASE + (src if src.startswith("/") else "/" + src)
+                  name = re.sub(r"[^A-Za-z0-9_.-]", "_", os.path.splitext(src.split("?")[0].strip("/"))[0].replace("/", "_")) + ".png"   # 폴더 이름까지 붙여서 겹치지 않게
+                  try:
+                      if not os.path.exists(os.path.join(ICON_DIR, name)):
+                          im = Image.open(io.BytesIO(get(url, binary=True))).convert("RGBA")
+                          if im.height > 96: im.thumbnail((400, 96), Image.LANCZOS)
+                          im.save(os.path.join(ICON_DIR, name), "PNG", optimize=True)   # 받은 그림을 새로 그려서 저장
+                      icons[alt] = name; added += 1
+                  except Exception as e:
+                      log(f"  아이콘 실패: {alt} ({type(e).__name__})")
+              return added
+
           def save_image(url, cid, leader=False):
               data = get(url, binary=True)
               im = Image.open(io.BytesIO(data)).convert("RGB")
@@ -184,6 +208,8 @@ jobs:
               os.makedirs(IMG_DIR, exist_ok=True)
               wr_map = json.load(open(MAP_FILE, encoding="utf-8")) if os.path.exists(MAP_FILE) else {}
               texts = json.load(open(TEXT_FILE, encoding="utf-8")) if os.path.exists(TEXT_FILE) else {}
+              icons = json.load(open(ICON_FILE, encoding="utf-8")) if os.path.exists(ICON_FILE) else {}
+              os.makedirs(ICON_DIR, exist_ok=True)
 
               # 1) 목록에서 게시글 번호 모으기 (최신 글부터, 전부 아는 글인 페이지가 나오면 멈춤)
               all_wr, n = [], 1
@@ -215,7 +241,8 @@ jobs:
                           break
                       continue
                   streak = 0
-                  cid, line, img_url, text = r
+                  cid, line, img_url, text, content = r
+                  collect_icons(content, icons)
                   wr_map[str(wr)] = [cid, img_url]
                   if cid not in texts and text: texts[cid] = text
                   if cid not in data:
@@ -238,11 +265,31 @@ jobs:
                       r = None
                   if r and r[0] == cid:
                       texts[cid] = r[3]; got_text += 1; streak = 0
+                      collect_icons(r[4], icons)
                   else:
                       streak += 1; log(f"  효과 글 실패: {cid} (게시글 {wr})")
                       if streak >= 3:
                           log("  연속 3번 실패해서 효과 글 수집은 여기서 멈춤"); break
               log(f"효과 글 {got_text}장 새로 저장 · 전체 {len(texts)}장")
+
+              # 2-3) 효과 글에 나오는데 아직 그림이 없는 아이콘 → 그 아이콘이 나오는 카드 페이지를 다시 읽어서 받음
+              def missing_icons():
+                  return {m for v in texts.values() for m in re.findall(r"⟦([^⟧]*)⟧", v) if m.strip() and m.strip() not in icons}
+              miss, tried, streak = missing_icons(), 0, 0
+              for cid, wr in sorted(first_wr.items()):
+                  if not miss: break
+                  if not any("⟦" + m + "⟧" in texts.get(cid, "") for m in miss): continue
+                  try:
+                      r = parse_detail(get(f"{BASE}/bbs/board.php?bo_table=cardlists&wr_id={wr}"))
+                  except Exception:
+                      r = None
+                  tried += 1
+                  if r: collect_icons(r[4], icons); streak = 0
+                  else:
+                      streak += 1
+                      if streak >= 3: log("  연속 3번 실패해서 아이콘 수집은 여기서 멈춤"); break
+                  miss = missing_icons()
+              log(f"아이콘 {len(icons)}종 · 이번에 페이지 {tried}개 확인 · 아직 없는 아이콘 {len(miss)}종 {sorted(miss)[:10]}")
 
               # 3) 이미지 없는 카드 이미지 받기 (같은 카드는 번호가 가장 작은 게시글 이미지)
               first = {}
@@ -261,6 +308,7 @@ jobs:
                   except Exception as e: log(f"  이미지 실패: {cid}")
 
               # 4) 저장
+              open(ICON_FILE, "w", encoding="utf-8").write(json.dumps(dict(sorted(icons.items())), ensure_ascii=False, indent=0) + "\n")
               open(TEXT_FILE, "w", encoding="utf-8").write("{\n" + ",\n".join(json.dumps(k) + ": " + json.dumps(v, ensure_ascii=False) for k, v in sorted(texts.items())) + "\n}\n")
               open(MAP_FILE, "w", encoding="utf-8").write("{\n" + ",\n".join(json.dumps(k) + ": " + json.dumps(v, ensure_ascii=False) for k, v in sorted(wr_map.items(), key=lambda kv: int(kv[0]))) + "\n}\n")
               if added:
