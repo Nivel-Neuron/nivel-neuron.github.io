@@ -363,6 +363,14 @@
   /* 덱 목록 · 확인창 */
   .D_Layer { position: absolute; inset: 0; z-index: 16; display: none; align-items: center; justify-content: center; background: rgba(0, 6, 25, .72); }
   .D_Layer.Show { display: flex; }
+  /* 덱 이름: 평소엔 제목처럼, 누르면 바꾸기 */
+  #D_NameBtn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; margin-left: 4px; padding: 6px 10px; background: none; border: none;
+    color: var(--text); font-family: inherit; font-size: 28px; font-weight: 900; font-style: italic; text-align: left; text-shadow: 0 0 12px rgba(79,227,255,.45); }
+  #D_NameTxt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  #D_NameTxt.Auto { color: #cfe3ff; }
+  #D_NameBtn i { flex-shrink: 0; font-style: normal; font-size: 20px; color: var(--neon); opacity: .85; }
+  #D_NameBtn:active { filter: brightness(1.4); }
+  #D_NameIn { width: 100%; font-family: inherit; font-size: 22px; font-weight: 800; color: var(--text); background: rgba(2,14,50,.8); border: 2px solid var(--neon); padding: 10px 14px; outline: none; }
   .D_Box {
     width: min(640px, 90%); max-height: 86%; display: flex; flex-direction: column; gap: 12px; padding: 22px;
     background: linear-gradient(180deg, #0c3488, #041a4a); border: 2px solid var(--neon); box-shadow: 0 0 30px rgba(79,227,255,.4);
@@ -635,6 +643,7 @@
   <section id="DeckView">
     <div class="D_Top">
       <button class="Util_Btn Top_Util" id="D_Home"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button>
+      <button id="D_NameBtn"><span id="D_NameTxt">새 덱</span><i>✎</i></button>
       <div class="D_Counts">
         <div class="D_Pill" id="D_CntDeck">덱<b>0</b>/ 40</div>
         <div class="D_Pill" id="D_CntTrig">트리거<b>0</b>/ 8</div>
@@ -691,6 +700,13 @@
     </div>
 
     <!-- 확인창 -->
+    <div class="D_Layer" id="D_NameLayer">
+      <div class="D_Box">
+        <h2>덱 이름</h2>
+        <input id="D_NameIn" maxlength="24" autocomplete="off" placeholder="비워두면 리더 이름으로 자동">
+        <div class="D_Row"><button id="DN_Ok">확인</button><button class="Red" id="DN_No">취소</button></div>
+      </div>
+    </div>
     <div class="D_Layer" id="D_Confirm">
       <div class="D_Box">
         <h2 id="DC_Title">확인</h2>
@@ -1094,7 +1110,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0050";
+const APP_VERSION = "20261125-0105";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2427,7 +2443,30 @@ function Sorted_Expanded(filterFn) {
 }
 
 // ---------- 덱 화면 그리기 ----------
+function Deck_Name() { return deck.name || (Leader() ? Leader().n + " 덱" : "새 덱"); }
+function Render_Deck_Name() {
+  const t = document.getElementById("D_NameTxt");
+  t.textContent = Deck_Name(); t.classList.toggle("Auto", !deck.name);
+}
+document.getElementById("D_NameBtn").addEventListener("click", () => {
+  const inp = document.getElementById("D_NameIn");
+  inp.value = deck.name || ""; inp.placeholder = (Leader() ? Leader().n + " 덱" : "새 덱") + " (비워두면 자동)";
+  document.getElementById("D_NameLayer").classList.add("Show");
+  setTimeout(() => inp.focus(), 50);
+});
+function Close_Name() { document.getElementById("D_NameLayer").classList.remove("Show"); document.getElementById("D_NameIn").blur(); }
+function Apply_Name() {
+  deck.name = document.getElementById("D_NameIn").value.trim().slice(0, 24);
+  // 이미 저장한 덱이면 덱 목록 이름도 같이 바꿈
+  if (deck.id) { const list = Load_List(); const d = list.find(x => x.id === deck.id); if (d) { d.name = deck.name || Deck_Name(); Save_List(list); } }
+  Save_Current(); Render_Deck_Name(); Close_Name();
+  Show_Toast(`덱 이름: ${Deck_Name()}`);
+}
+document.getElementById("DN_Ok").addEventListener("click", Apply_Name);
+document.getElementById("DN_No").addEventListener("click", Close_Name);
+document.getElementById("D_NameIn").addEventListener("keydown", (e) => { if (e.key === "Enter") Apply_Name(); if (e.key === "Escape") Close_Name(); });
 function Render_Deck() {
+  Render_Deck_Name();
   const total = Deck_Total(), trig = Deck_Trig(), L = Leader();
   const setPill = (el, label, v, max) => { el.innerHTML = `${label}<b>${v}</b>/ ${max}`; el.classList.toggle("Full", v >= max); };
   setPill(document.getElementById("D_CntDeck"), "덱", total, DECK_SIZE);
