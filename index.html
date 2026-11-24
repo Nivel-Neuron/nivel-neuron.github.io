@@ -108,7 +108,25 @@
   /* ================= 공지사항 (지금은 버튼 모양만, 기능은 다음에) ================= */
   #A_Btn { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 12px 30px; font-size: 19px; font-weight: 900; color: var(--text);
     background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
-  #A_Btn:active { filter: brightness(1.4); }
+  #A_Btn:active, #A_Ok:active { filter: brightness(1.4); }
+  #A_Dim { position: absolute; inset: 0; z-index: 41; background: rgba(0,6,24,.75); display: none; place-items: center; }
+  #A_Dim.Show { display: grid; }
+  #A_Box { width: 860px; max-height: 680px; display: flex; flex-direction: column; padding: 26px 34px 22px; background: linear-gradient(180deg, #0b2a78, #061848);
+    border: 2px solid var(--neon); box-shadow: 0 0 30px rgba(79,227,255,.35); clip-path: polygon(3% 0, 97% 0, 100% 4%, 100% 96%, 97% 100%, 3% 100%, 0 96%, 0 4%); }
+  #A_Box h2 { margin: 0 0 4px; font-size: 30px; font-weight: 900; font-style: italic; text-align: center; color: #fff; text-shadow: 0 0 12px rgba(79,227,255,.6); }
+  #A_Date { text-align: center; font-size: 17px; font-weight: 800; color: var(--neon); margin-bottom: 14px; }
+  #A_List { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 6px 4px 2px; }
+  .A_Sec { margin-bottom: 14px; }
+  .A_Sec h3 { margin: 0 0 8px; padding: 6px 14px; font-size: 20px; font-weight: 900; background: linear-gradient(90deg, rgba(29,111,232,.7), rgba(8,36,110,0)); border-left: 4px solid var(--neon); }
+  .A_Sec ul { margin: 0; padding: 0 0 0 4px; list-style: none; }
+  .A_Sec li { position: relative; padding-left: 22px; font-size: 18px; font-weight: 700; line-height: 1.55; margin: 3px 0; }
+  .A_Sec li:before { content: "◆"; position: absolute; left: 2px; top: 1px; font-size: 12px; color: var(--neon); }
+  .A_Sec li b { color: #ffd54f; }
+  .A_Sec li ul li { font-size: 16px; color: #cfe3ff; font-weight: 600; }
+  .A_Sec li ul li:before { content: "·"; font-size: 18px; top: -2px; color: var(--sub); }
+  .A_Row { display: flex; justify-content: center; margin-top: 14px; }
+  #A_Ok { height: 56px; padding: 0 64px; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
 
   /* ================= 홈 화면에 추가 ================= */
   #I_Btn { position: absolute; top: 22px; left: 26px; display: none; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
@@ -782,6 +800,16 @@
 
   <div id="Toast"></div>
 
+  <!-- 공지사항 (업데이트 내역) -->
+  <div id="A_Dim">
+    <div id="A_Box">
+      <h2>공지사항</h2>
+      <div id="A_Date"></div>
+      <div id="A_List"></div>
+      <div class="A_Row"><button id="A_Ok">확인</button></div>
+    </div>
+  </div>
+
   <!-- 홈 화면에 추가 안내 창 -->
   <div id="I_Dim">
     <div id="I_Box">
@@ -1164,7 +1192,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0145";
+const APP_VERSION = "20261125-0150";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1193,6 +1221,52 @@ function Show_Toast(text) {
 }
 document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
 
+
+
+// ---------- 공지사항 (업데이트 내역) ----------
+// 새 업데이트는 맨 앞에 추가. 지금은 가장 최근 것 하나만 보여줌.
+// 글 안의 **굵게** 는 노란 글씨, [ ... ] 배열은 아래 단계 목록
+const ANNOUNCE = [
+  { date: "2026. 11. 25", title: "업데이트 내역", secs: [
+    { h: "카드 상세 정보", items: [
+      ["덱 만들기 · 카드 추가 화면에서 카드를 누르면 **카드 상세 정보** 창이 열려요", [
+        "카드 이미지, 속성 · 종류 · 트리거 · 코스트 · 파워 · 히트 · IP",
+        "**카드 효과** 전문 (1070장 전부)",
+        "효과 속 키워드는 **공식 아이콘** 그대로 표시 (패시브, 엔트리, 커넥트 등)",
+        "리더 카드는 각성 레벨 · 서약과 **기본면 / 각성면** 효과를 나눠서 표시",
+        "**‹ ›** 버튼으로 이전 · 다음 카드로 넘기기",
+        "아래 **해제(−) / 추가(+)** 버튼으로 덱에 넣고 빼기 (리더는 \"리더로 선택\")"]],
+      ["카드 이미지 아래에 **금제 표시**", [
+        "금지(빨강) · 제한(짙은 주황) · 준제한(옅은 주황)",
+        "금지 페어(보라)는 같이 못 넣는 상대 카드 이름까지 표시"]],
+      ["**리미트 레귤레이션** 화면에서도 카드를 누르면 상세 정보를 볼 수 있어요 (보기 전용)", []]]},
+    { h: "덱 만들기", items: [
+      ["카드 추가 필터에 **금제(금지 · 제한 · 준제한)** 추가 · 여러 개 함께 선택 가능", []],
+      ["덱에 넣을 수 없는 카드도 **원래 색**으로 보여요 (이유는 상세 정보에서 확인)", []],
+      ["홈 버튼 옆에 **덱 이름** 표시 · 누르면 이름 변경 (비워두면 \"리더 이름 + 덱\")", []]]},
+    { h: "홈 화면", items: [
+      ["'안전 안내' 버튼 이름을 **'주의 사항'**으로 변경", []],
+      ["왼쪽 위 **'홈 화면에 추가'** 버튼 (브라우저로 열었을 때만 보여요)", [
+        "안드로이드 크롬은 바로 설치, 삼성 인터넷 · 웨일 · 사파리 등은 브라우저에 맞는 방법 안내",
+        "네이버 앱 · 카카오톡에서 열면 크롬 / 사파리로 여는 방법과 주소 복사 버튼"]],
+      ["니벨 뉴런 전용 **앱 아이콘** 추가", []],
+      ["안드로이드에서 설치하면 **주소창 없는 전체 화면 · 가로 화면**으로 열려요", []],
+      ["가운데 **공지사항** 버튼 추가", []]]}
+  ]}
+];
+function A_Line(t) { return Esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"); }
+function Show_Announce() {
+  const a = ANNOUNCE[0];
+  document.querySelector("#A_Box h2").textContent = "공지사항";
+  document.getElementById("A_Date").textContent = `${a.date} ${a.title}`;
+  document.getElementById("A_List").innerHTML = a.secs.map(sec =>
+    `<div class="A_Sec"><h3>${Esc(sec.h)}</h3><ul>${sec.items.map(([t, sub]) =>
+      `<li>${A_Line(t)}${sub && sub.length ? `<ul>${sub.map(x => `<li>${A_Line(x)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul></div>`).join("");
+  document.getElementById("A_List").scrollTop = 0;
+  document.getElementById("A_Dim").classList.add("Show");
+}
+document.getElementById("A_Btn").addEventListener("click", Show_Announce);
+document.getElementById("A_Ok").addEventListener("click", () => document.getElementById("A_Dim").classList.remove("Show"));
 
 // ---------- 홈 화면에 추가 (브라우저로 열었을 때만 왼쪽 위 버튼) ----------
 // 홈 화면 아이콘으로 열면(주소창 없는 상태) 이미 추가된 것이라 버튼을 숨김
