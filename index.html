@@ -105,6 +105,11 @@
 
 
 
+  /* ================= 공지사항 (지금은 버튼 모양만, 기능은 다음에) ================= */
+  #A_Btn { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 12px 30px; font-size: 19px; font-weight: 900; color: var(--text);
+    background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
+  #A_Btn:active { filter: brightness(1.4); }
+
   /* ================= 홈 화면에 추가 ================= */
   #I_Btn { position: absolute; top: 22px; left: 26px; display: none; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
     background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
@@ -643,6 +648,7 @@
   <section id="Home" class="Show">
     <button id="N_Btn">🛡 주의 사항</button>
     <button id="I_Btn">📲 홈 화면에 추가</button>
+    <button id="A_Btn">📢 공지사항</button>
     <div class="Home_Title">
       <div class="Home_Sub">NIVEL ARENA</div>
       <h1>니벨아레나 뉴런</h1>
@@ -1158,7 +1164,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0140";
+const APP_VERSION = "20261125-0145";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
