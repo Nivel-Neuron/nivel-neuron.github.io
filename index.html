@@ -231,6 +231,7 @@
   .LV_X.G { color: #5be3a0; }
   .LV_Why { width: 230px; font-size: 16px; font-weight: 800; color: #5be3a0; padding: 0 14px; flex-shrink: 0; }
   .LV_Rel .LV_Row { opacity: .85; }
+  .LV_Row[data-id]:active { filter: brightness(1.5); }
   .LV_Note { font-size: 16px; color: var(--sub); padding: 2px 4px; flex-shrink: 0; }
   .NC .Lm { position: absolute; bottom: 38px; left: 3px; font-size: 10px; font-weight: 900; padding: 1px 4px; border-radius: 3px; }
   .NC .Lm.Ban { background: #d6223a; } .NC .Lm.L1 { background: #f08a2a; color: #2a1200; } .NC .Lm.L2 { background: #d9a62a; color: #2a1a00; }
@@ -1092,7 +1093,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0005";
+const APP_VERSION = "20261125-0010";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2736,7 +2737,7 @@ const LV_COL = { "화": "#c8364a", "대": "#1f9d6b", "폭": "#7b46c8", "파": "#
 function LV_Row(id, badge = "") {
   const c = CARD_BY_ID[id];
   const col = c ? LV_COL[c.at] : "#555";
-  return `<div class="LV_Row"><span class="LV_Sq" style="background:${col}"></span><span class="LV_Id">${id}</span><span class="LV_Nm">${Esc(c ? c.n : id)}</span>${badge}</div>`;
+  return `<div class="LV_Row" data-id="${id}"><span class="LV_Sq" style="background:${col}"></span><span class="LV_Id">${id}</span><span class="LV_Nm">${Esc(c ? c.n : id)}</span>${badge}</div>`;
 }
 function LV_Chg(id, now, cls) {
   const old = LIMIT_REG.changed[id];
@@ -2764,7 +2765,13 @@ function Show_Limit(show) {
   v.classList.toggle("Show", show);
   if (show) { Render_Limit(); document.getElementById("LV_Body").scrollTop = 0; }
 }
-document.getElementById("LV_Body").addEventListener("click", (e) => { const h = e.target.closest(".LV_Hd"); if (h) h.parentElement.classList.toggle("Fold"); });
+document.getElementById("LV_Body").addEventListener("click", (e) => {
+  const h = e.target.closest(".LV_Hd"); if (h) { h.parentElement.classList.toggle("Fold"); return; }
+  const r = e.target.closest(".LV_Row[data-id]"); if (!r || !CARD_BY_ID[r.dataset.id]) return;
+  // 화면에 보이는 순서대로 ‹ › 넘기기 (같은 카드가 여러 곳에 나오면 처음 한 번만)
+  const list = [...new Set([...document.querySelectorAll("#LV_Body .LV_Row[data-id]")].map(x => x.dataset.id))].filter(id => CARD_BY_ID[id]);
+  Open_CD(r.dataset.id, list, "view");     // 보기 전용 (추가/해제 버튼 없음)
+});
 document.getElementById("LV_Home").addEventListener("click", () => { Show_Limit(false); Show_Home(true); });
 document.getElementById("Home_Limit").addEventListener("click", () => { Show_Home(false); Show_Limit(true); });
 
