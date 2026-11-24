@@ -303,7 +303,6 @@
   .NC .Nm { font-size: 10.5px; font-weight: 800; line-height: 1.2; padding: 4px 3px; min-height: 32px; display: grid; place-items: center; word-break: keep-all; }
   .NC .Ct { position: absolute; bottom: 38px; right: 4px; font-size: 13px; font-weight: 900; background: rgba(0,0,0,.6); padding: 1px 6px; border-radius: 9px; }
   .NC.Empty { border-color: rgba(79,227,255,.25); background: linear-gradient(150deg, #16051e, #2a0c3a 50%, #05122e); opacity: .45; justify-content: center; align-items: center; font-weight: 900; font-style: italic; font-size: 11px; color: #eaf6ff; }
-  .NC.Off { filter: grayscale(.8) brightness(.55); }
   /* 카드 이미지 (cards 폴더) - 불러오면 글자 대신 이미지, 못 불러오면 글자 카드 그대로 */
   .NC .Im { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; opacity: 0; pointer-events: none; }
   .NC.HasImg { border-width: 1px; }
@@ -674,7 +673,7 @@
       <div class="P_Body">
         <div class="P_Filters" id="P_Filters"></div>
         <div class="P_Right">
-          <div class="P_Info"><span id="P_Count">0장</span><span>카드를 누르면 상세 정보 · 흐린 카드는 넣을 수 없는 카드</span></div>
+          <div class="P_Info"><span id="P_Count">0장</span><span>카드를 누르면 상세 정보 · 넣을 수 없는 카드는 상세 정보에서 이유 확인</span></div>
           <div id="P_Grid"></div>
         </div>
       </div>
@@ -1093,7 +1092,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261124-2355";
+const APP_VERSION = "20261125-0005";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2673,7 +2672,7 @@ function Render_Picker() {
   if (!list.length) { grid.innerHTML = `<div class="P_Empty">조건에 맞는 카드가 없어</div>`; return; }
   grid.innerHTML = list.map(c => {
     if (c.ty === "리") return Tile(c, { lead: true, count: deck.leader === c.id ? "선택됨" : "" });
-    return Tile(c, { off: !Can_Add(c).ok, count: deck.cards[c.id] ? deck.cards[c.id] + "/" + Max_Copies(c.id) : "" });
+    return Tile(c, { count: deck.cards[c.id] ? deck.cards[c.id] + "/" + Max_Copies(c.id) : "" });
   }).join("");
 }
 document.getElementById("P_Grid").addEventListener("click", (e) => {
