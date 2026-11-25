@@ -106,6 +106,7 @@
 
 
   /* ================= 공지사항 (지금은 버튼 모양만, 기능은 다음에) ================= */
+  #Home_Credit { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font-size: 15px; color: var(--sub); opacity: 1; text-shadow: 0 1px 3px #000a; letter-spacing: .02em; pointer-events: none; }
   #A_Btn { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 12px 30px; font-size: 19px; font-weight: 900; color: var(--text);
     background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
   #A_Btn:active, #A_Ok:active { filter: brightness(1.4); }
@@ -691,6 +692,7 @@
         <div class="Home_Desc">금지 · 제한 카드 목록</div>
       </button>
     </div>
+    <div id="Home_Credit">비공식 팬 제작 앱 · 카드 정보와 이미지 출처: 니벨아레나 공식 홈페이지 (nivelarena.co.kr)</div>
   </section>
 
   <!-- ================= 리미트 레귤레이션 화면 ================= -->
@@ -828,7 +830,7 @@
   <div id="N_Dim">
     <div id="N_Box">
       <h2>안전 이용 안내</h2>
-      <div class="N_Url"><small>니벨 뉴런 공식 주소 (이 주소 하나뿐)</small>nivel-neuron.github.io</div>
+      <div class="N_Url"><small>니벨 뉴런 접속 주소 (이 주소 하나뿐)</small>nivel-neuron.github.io</div>
       <ul>
         <li>니벨 뉴런은 <b>파일 다운로드·프로그램 설치</b>를 요구하지 않아요</li>
         <li><b>로그인·비밀번호·개인정보·결제</b>를 요구하지 않아요</li>
@@ -841,7 +843,7 @@
       </div>
     </div>
   </div>
-  <button id="Update_Bar">새 버전이 있어 · 눌러서 업데이트</button>
+  <button id="Update_Bar">새 버전이 있어요 · 눌러서 업데이트</button>
   <div id="Top_Bar">
     <div><button class="Util_Btn Top_Util" id="Btn_Home" aria-label="홈"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button></div>
     <div id="Timer_Box">
@@ -875,7 +877,7 @@
 <div class="Modal_Back" id="Modal_Reset_Log">
   <div class="Modal">
     <h2>초기화</h2>
-    <p style="font-size:19px;color:var(--text);font-weight:700">듀얼 로그를 초기화 하시겠습니까?</p>
+    <p style="font-size:19px;color:var(--text);font-weight:700">듀얼 로그를 초기화하시겠습니까?</p>
     <button class="Check_Row" id="Btn_Timer_Check"><span class="Check_Box"></span>타이머 초기화</button>
     <div class="Modal_Row">
       <button id="Btn_Log_Yes">예</button>
@@ -888,7 +890,7 @@
 <div class="Modal_Back" id="Modal_Awake">
   <div class="Modal">
     <h2 id="Awake_Title">각성 레벨</h2>
-    <p id="Awake_Desc">리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.</p>
+    <p id="Awake_Desc">리더 카드마다 각성 레벨이 달라요. 이 레벨에 도달하면 각성 표시가 켜져요.</p>
     <div class="Awake_Set">
       <span style="color:var(--p1)">PLAYER 01</span>
       <div class="Stepper"><button data-awake="p1" data-d="-1">−</button><b id="Awake_Val_p1">5</b><button data-awake="p1" data-d="1">+</button></div>
@@ -939,7 +941,7 @@
 
 <div id="Rotate_Notice">
   📱 가로 화면으로 돌려줘
-  <small>이 버전은 가로 전용이야</small>
+  <small>이 앱은 가로 화면 전용이에요</small>
 </div>
 
 <script>
@@ -1195,7 +1197,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-1830";
+const APP_VERSION = "20261125-1905";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1279,7 +1281,7 @@ function Is_App_Mode() {
 }
 let INSTALL_EVT = null;   // 안드로이드 크롬이 주는 "앱 설치" 기회
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); INSTALL_EVT = e; Update_I_Btn(); });
-window.addEventListener("appinstalled", () => { INSTALL_EVT = null; document.getElementById("I_Wrap").classList.remove("Show"); Show_Toast("홈 화면에 추가했어"); });
+window.addEventListener("appinstalled", () => { INSTALL_EVT = null; document.getElementById("I_Wrap").classList.remove("Show"); Show_Toast("홈 화면에 추가했어요"); });
 function Update_I_Btn() { document.getElementById("I_Wrap").classList.toggle("Show", !Is_App_Mode()); }
 // 어떤 기기 · 어떤 브라우저로 열었는지 (안내를 브라우저마다 다르게 보여주기 위해)
 function Browser_Kind() {
@@ -1361,10 +1363,10 @@ function Show_I_Guide() {
 }
 document.getElementById("I_Extra").addEventListener("click", async (e) => {
   if (e.target.id === "I_Copy") {
-    try { await navigator.clipboard.writeText(SITE_URL); Show_Toast("주소를 복사했어"); }
+    try { await navigator.clipboard.writeText(SITE_URL); Show_Toast("주소를 복사했어요"); }
     catch (err) {
       const t = document.createElement("textarea"); t.value = SITE_URL; document.body.appendChild(t); t.select();
-      try { document.execCommand("copy"); Show_Toast("주소를 복사했어"); } catch (e2) { Show_Toast(SITE_URL); }
+      try { document.execCommand("copy"); Show_Toast("주소를 복사했어요"); } catch (e2) { Show_Toast(SITE_URL); }
       t.remove();
     }
   }
@@ -1377,7 +1379,7 @@ document.getElementById("I_Btn").addEventListener("click", async () => {
   if (INSTALL_EVT) {             // 안드로이드 크롬: 바로 "앱 설치" 확인창
     const e = INSTALL_EVT; INSTALL_EVT = null;
     e.prompt();
-    try { const r = await e.userChoice; if (r && r.outcome === "dismissed") Show_Toast("나중에 다시 눌러서 설치할 수 있어"); } catch (err) {}
+    try { const r = await e.userChoice; if (r && r.outcome === "dismissed") Show_Toast("나중에 다시 눌러서 설치할 수 있어요"); } catch (err) {}
     return;
   }
   Show_I_Guide();                // 아이폰·아이패드·그 밖: 추가 방법 안내
@@ -1416,8 +1418,8 @@ document.getElementById("Home_Duel").addEventListener("click", () => {
 function Open_Awake(beforeDuel) {
   document.getElementById("Awake_Title").textContent = beforeDuel ? "듀얼 시작 전 각성 레벨 설정" : "각성 레벨";
   document.getElementById("Awake_Desc").textContent = beforeDuel
-    ? "두 플레이어 리더의 각성 레벨을 먼저 맞춰줘."
-    : "리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.";
+    ? "두 플레이어 리더의 각성 레벨을 먼저 맞춰 주세요."
+    : "리더 카드마다 각성 레벨이 달라요. 이 레벨에 도달하면 각성 표시가 켜져요.";
   document.getElementById("Awake_Ok").textContent = beforeDuel ? "듀얼 시작" : "닫기";
   Show_Modal("Modal_Awake", true);
 }
@@ -2577,15 +2579,15 @@ function Other_Colors(vc) {
 function Can_Add(card) {
   if (card.ty === "리") return { ok: true };
   const L = Leader();
-  if (!L) return { ok: false, why: "리더를 먼저 골라줘" };
-  if (!Color_Ok(card, L)) return { ok: false, why: "리더 서약에 맞지 않는 속성이야" };
+  if (!L) return { ok: false, why: "리더를 먼저 골라 주세요" };
+  if (!Color_Ok(card, L)) return { ok: false, why: "리더 서약에 맞지 않는 속성이에요" };
   const mx = Max_Copies(card.id);
-  if (mx === 0) return { ok: false, why: "금지 카드라서 덱에 넣을 수 없어" };
-  if ((deck.cards[card.id] || 0) >= mx) return { ok: false, why: mx < MAX_SAME ? `${mx === 2 ? "준제한" : "제한"} 카드라서 ${mx}장까지야` : "같은 카드는 3장까지야" };
+  if (mx === 0) return { ok: false, why: "금지 카드라서 덱에 넣을 수 없어요" };
+  if ((deck.cards[card.id] || 0) >= mx) return { ok: false, why: mx < MAX_SAME ? `${mx === 2 ? "준제한" : "제한"} 카드라서 ${mx}장까지만 넣을 수 있어요` : "같은 카드는 3장까지만 넣을 수 있어요" };
   const pp = Pair_Partners(card.id).find(p => deck.cards[p] || deck.leader === p);
-  if (pp) return { ok: false, why: `금지 페어: ${CARD_BY_ID[pp] ? CARD_BY_ID[pp].n : pp}와(과) 같이 넣을 수 없어` };
-  if (Deck_Total() >= DECK_SIZE) return { ok: false, why: "덱이 40장 꽉 찼어" };
-  if (card.tr && Deck_Trig() >= MAX_TRIG) return { ok: false, why: "트리거는 8장까지야" };
+  if (pp) return { ok: false, why: `금지 페어: ${CARD_BY_ID[pp] ? CARD_BY_ID[pp].n : pp}와(과) 같이 넣을 수 없어요` };
+  if (Deck_Total() >= DECK_SIZE) return { ok: false, why: "덱이 40장으로 꽉 찼어요" };
+  if (card.tr && Deck_Trig() >= MAX_TRIG) return { ok: false, why: "트리거는 8장까지만 넣을 수 있어요" };
   return { ok: true };
 }
 function Color_Ok(card, L) {
@@ -2618,7 +2620,7 @@ function Remove_Card(id) {
   if (!deck.cards[id]) return;
   deck.cards[id]--;
   if (deck.cards[id] <= 0) delete deck.cards[id];
-  Show_Toast(`${CARD_BY_ID[id].n} 1장 뺐어`);
+  Show_Toast(`${CARD_BY_ID[id].n} 1장 뺐어요`);
   Deck_Changed();
 }
 
@@ -2639,7 +2641,7 @@ function Try_Set_Leader(L) {
   const apply = () => { bad.forEach(id => delete deck.cards[id]); deck.leader = L.id; Deck_Changed(); Show_Toast(`리더: ${L.n}`); };
   if (bad.length === 0) { apply(); return; }
   const n = bad.reduce((a, id) => a + deck.cards[id], 0);
-  Ask("리더 변경", `${L.n}(으)로 바꾸면 서약 또는 금지 페어에 걸리는 카드 ${n}장이 덱에서 빠져. 바꿀까?`, apply);
+  Ask("리더 변경", `${L.n}(으)로 바꾸면 서약 또는 금지 페어에 걸리는 카드 ${n}장이 덱에서 빠져요. 바꿀까요?`, apply);
 }
 
 function Deck_Changed() { Save_Current(); Render_Deck(); if (Picker_Open()) Render_Picker(); }
@@ -2831,8 +2833,8 @@ function Render_CD() {
   document.getElementById("CD_Grid").innerHTML = g;
   // 효과 글
   const tx = document.getElementById("CD_Text");
-  if (CD_TEXT_STATE === "ok") tx.innerHTML = CD_TEXT[c.id] != null ? Effect_Html(CD_TEXT[c.id]) : `<span class="Dim">아직 효과 글이 없는 카드야. 자동 업데이트 때 채워져.</span>`;
-  else if (CD_TEXT_STATE === "fail") tx.innerHTML = `<span class="Dim">효과 글을 불러오지 못했어. 인터넷 연결을 확인해줘.</span>`;
+  if (CD_TEXT_STATE === "ok") tx.innerHTML = CD_TEXT[c.id] != null ? Effect_Html(CD_TEXT[c.id]) : `<span class="Dim">아직 효과 글이 없는 카드예요. 자동 업데이트 때 채워져요.</span>`;
+  else if (CD_TEXT_STATE === "fail") tx.innerHTML = `<span class="Dim">효과 글을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</span>`;
   else tx.innerHTML = `<span class="Dim">효과 글 불러오는 중…</span>`;
   // 이전 · 다음
   const i = CD.list.indexOf(c.id);
@@ -2866,7 +2868,7 @@ document.getElementById("CD_Next").addEventListener("click", () => { const i = C
 document.getElementById("CD_Plus").addEventListener("click", () => {
   const c = CARD_BY_ID[CD.id]; const r = Can_Add(c);
   if (!r.ok) { Show_Toast(r.why); return; }
-  Add_Card(c); Show_Toast(`${c.n} 1장 넣었어`); Render_CD();
+  Add_Card(c); Show_Toast(`${c.n} 1장 넣었어요`); Render_CD();
 });
 document.getElementById("CD_Minus").addEventListener("click", () => { Remove_Card(CD.id); Render_CD(); });
 document.getElementById("CD_Lead").addEventListener("click", () => {
@@ -2966,7 +2968,7 @@ function Render_Picker() {
   PICK_LIST = list.map(c => c.id);
   document.getElementById("P_Count").textContent = `${list.length}장`;
   const grid = document.getElementById("P_Grid");
-  if (!list.length) { grid.innerHTML = `<div class="P_Empty">조건에 맞는 카드가 없어</div>`; return; }
+  if (!list.length) { grid.innerHTML = `<div class="P_Empty">조건에 맞는 카드가 없어요</div>`; return; }
   grid.innerHTML = list.map(c => {
     if (c.ty === "리") return Tile(c, { lead: true, count: deck.leader === c.id ? "선택됨" : "" });
     return Tile(c, { count: deck.cards[c.id] ? deck.cards[c.id] + "/" + Max_Copies(c.id) : "" });
@@ -2986,13 +2988,13 @@ function Save_Deck() {
   const i = list.findIndex(d => d.id === deck.id);
   if (i >= 0) list[i] = copy; else list.push(copy);
   Save_List(list); Save_Current(); Render_Deck();
-  Show_Toast(`"${deck.name}" 저장했어`);
+  Show_Toast(`"${deck.name}" 저장했어요`);
 }
 document.getElementById("D_Save").addEventListener("click", Save_Deck);
 
 function Render_List() {
   const list = Load_List(), box = document.getElementById("DL_List");
-  if (!list.length) { box.innerHTML = `<p style="color:var(--sub);font-size:16px">저장된 덱이 없어. 덱을 만들고 "저장"을 눌러줘.</p>`; return; }
+  if (!list.length) { box.innerHTML = `<p style="color:var(--sub);font-size:16px">저장된 덱이 없어요. 덱을 만들고 "저장"을 눌러 주세요.</p>`; return; }
   box.innerHTML = list.map(d => {
     const L = d.leader ? CARD_BY_ID[d.leader] : null;
     const n = Object.values(d.cards).reduce((a, b) => a + b, 0);
@@ -3006,26 +3008,26 @@ document.getElementById("DL_Close").addEventListener("click", () => document.get
 document.getElementById("DL_New").addEventListener("click", () => {
   deck = New_Deck(); Deck_Changed();
   document.getElementById("D_ListLayer").classList.remove("Show");
-  Show_Toast("새 덱을 시작했어");
+  Show_Toast("새 덱을 시작했어요");
 });
 document.getElementById("DL_List").addEventListener("click", (e) => {
   const o = e.target.closest("[data-open]"), d = e.target.closest("[data-del]");
   if (o) {
     const found = Load_List().find(x => x.id === o.dataset.open);
-    if (found) { deck = JSON.parse(JSON.stringify(found)); Deck_Changed(); document.getElementById("D_ListLayer").classList.remove("Show"); Show_Toast(`"${deck.name}" 열었어`); }
+    if (found) { deck = JSON.parse(JSON.stringify(found)); Deck_Changed(); document.getElementById("D_ListLayer").classList.remove("Show"); Show_Toast(`"${deck.name}" 열었어요`); }
   }
   if (d) {
     const target = Load_List().find(x => x.id === d.dataset.del);
     if (!target) return;
-    Ask("덱 삭제", `"${target.name}" 덱을 삭제할까? 삭제하면 되돌릴 수 없어.`, () => {
+    Ask("덱 삭제", `"${target.name}" 덱을 삭제할까요? 삭제하면 되돌릴 수 없어요.`, () => {
       Save_List(Load_List().filter(x => x.id !== target.id));
       if (deck.id === target.id) { deck.id = null; Save_Current(); }
-      Render_List(); Show_Toast("삭제했어");
+      Render_List(); Show_Toast("삭제했어요");
     });
   }
 });
 document.getElementById("D_ClearBtn").addEventListener("click", () => {
-  Ask("덱 초기화", "덱에 넣은 카드를 전부 뺄까? 리더와 덱 이름은 그대로 남아.", () => { deck.cards = {}; Deck_Changed(); Show_Toast("카드를 전부 뺐어"); });
+  Ask("덱 초기화", "덱에 넣은 카드를 전부 뺄까요? 리더와 덱 이름은 그대로 남아요.", () => { deck.cards = {}; Deck_Changed(); Show_Toast("카드를 전부 뺐어요"); });
 });
 
 // ---------- 리미트 레귤레이션 화면 ----------
