@@ -129,9 +129,12 @@
     clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
 
   /* ================= 홈 화면에 추가 ================= */
-  #I_Btn { position: absolute; top: 22px; left: 26px; display: none; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
+  /* 버튼 + 밑에 작은 설명 글씨 (앱 모드에서는 둘 다 숨김) */
+  #I_Wrap { position: absolute; top: 22px; left: 26px; display: none; flex-direction: column; align-items: center; gap: 6px; }
+  #I_Wrap.Show { display: flex; }
+  #I_Cap { font-size: 14px; font-weight: 800; color: #8fd8ff; letter-spacing: .5px; text-shadow: 0 0 8px rgba(2,10,36,.9); white-space: nowrap; }
+  #I_Btn { display: flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 19px; font-weight: 900; color: var(--text);
     background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); font-family: inherit; }
-  #I_Btn.Show { display: flex; }
   #I_Btn:active, #I_Ok:active { filter: brightness(1.4); }
   #I_Dim { position: absolute; inset: 0; z-index: 41; background: rgba(0,6,24,.75); display: none; place-items: center; }
   #I_Dim.Show { display: grid; }
@@ -665,7 +668,7 @@
   <!-- 홈 화면: 듀얼 / 덱 만들기 / 리미트 레귤레이션 -->
   <section id="Home" class="Show">
     <button id="N_Btn">🛡 주의 사항</button>
-    <button id="I_Btn">📲 홈 화면에 추가</button>
+    <div id="I_Wrap"><button id="I_Btn">📲 홈 화면에 추가</button><div id="I_Cap">[주소창 없이 전체 화면으로]</div></div>
     <button id="A_Btn">📢 공지사항</button>
     <div class="Home_Title">
       <div class="Home_Sub">NIVEL ARENA</div>
@@ -1192,7 +1195,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-0150";
+const APP_VERSION = "20261125-1830";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1276,8 +1279,8 @@ function Is_App_Mode() {
 }
 let INSTALL_EVT = null;   // 안드로이드 크롬이 주는 "앱 설치" 기회
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); INSTALL_EVT = e; Update_I_Btn(); });
-window.addEventListener("appinstalled", () => { INSTALL_EVT = null; document.getElementById("I_Btn").classList.remove("Show"); Show_Toast("홈 화면에 추가했어"); });
-function Update_I_Btn() { document.getElementById("I_Btn").classList.toggle("Show", !Is_App_Mode()); }
+window.addEventListener("appinstalled", () => { INSTALL_EVT = null; document.getElementById("I_Wrap").classList.remove("Show"); Show_Toast("홈 화면에 추가했어"); });
+function Update_I_Btn() { document.getElementById("I_Wrap").classList.toggle("Show", !Is_App_Mode()); }
 // 어떤 기기 · 어떤 브라우저로 열었는지 (안내를 브라우저마다 다르게 보여주기 위해)
 function Browser_Kind() {
   const ua = navigator.userAgent || "";
