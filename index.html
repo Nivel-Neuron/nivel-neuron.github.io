@@ -666,7 +666,7 @@
 <div id="Bg"></div>
 <div id="Stage">
 <div id="App">
-  <!-- 홈 화면: 듀얼 / 덱 만들기 / 리미트 레귤레이션 -->
+  <!-- 홈 화면: 대전 / 덱 만들기 / 리미트 레귤레이션 -->
   <section id="Home" class="Show">
     <button id="N_Btn">🛡 주의 사항</button>
     <div id="I_Wrap"><button id="I_Btn">📲 홈 화면에 추가</button><div id="I_Cap">[주소창 없이 전체 화면으로]</div></div>
@@ -678,7 +678,7 @@
     <div class="Home_Menu">
       <button class="Home_Card" id="Home_Duel">
         <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10 44 44M44 44l8 2-2-8M54 10 20 44M20 44l-8 2 2-8M14 50l6-6M50 50l-6-6"/></svg></div>
-        <div class="Home_Name">듀얼</div>
+        <div class="Home_Name">대전</div>
         <div class="Home_Desc">레벨 · 대미지 · 사이즈 계산</div>
       </button>
       <button class="Home_Card" id="Home_Deck">
@@ -877,7 +877,7 @@
 <div class="Modal_Back" id="Modal_Reset_Log">
   <div class="Modal">
     <h2>초기화</h2>
-    <p style="font-size:19px;color:var(--text);font-weight:700">듀얼 로그를 초기화하시겠습니까?</p>
+    <p style="font-size:19px;color:var(--text);font-weight:700">대전 기록을 초기화하시겠습니까?</p>
     <button class="Check_Row" id="Btn_Timer_Check"><span class="Check_Box"></span>타이머 초기화</button>
     <div class="Modal_Row">
       <button id="Btn_Log_Yes">예</button>
@@ -981,7 +981,7 @@ function Other(id) { return id === "p1" ? "p2" : "p1"; }
 function Add_Log(text) {
   const sec = Math.floor(state.timerMs / 1000);
   const t = `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
-  state.log.push({ t, text });   // 듀얼 타이머 기준 시각
+  state.log.push({ t, text });   // 대전 타이머 기준 시각
 }
 
 // ---------- 되돌리기 ----------
@@ -1030,7 +1030,7 @@ function Reset_Game(clearLog) {
   }
   state.turnPlayer = null;
   state.turnCount = 0;
-  if (clearLog) state.log = [];    // "예": 듀얼 로그까지 비움
+  if (clearLog) state.log = [];    // "예": 대전 기록까지 비움
   Add_Log("초기화");
   Render_All();
 }
@@ -1197,7 +1197,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-1905";
+const APP_VERSION = "20261125-1915";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1412,15 +1412,15 @@ document.getElementById("N_Ok").addEventListener("click", () => {
 })();
 document.getElementById("Home_Duel").addEventListener("click", () => {
   Show_Home(false); Align_Awake_Button();
-  Open_Awake(true);   // 듀얼 들어갈 때 각성 레벨부터 설정
+  Open_Awake(true);   // 대전 들어갈 때 각성 레벨부터 설정
 });
-// 각성 레벨 창: 듀얼 시작 전이면 문구를 바꿔서 띄움
+// 각성 레벨 창: 대전 시작 전이면 문구를 바꿔서 띄움
 function Open_Awake(beforeDuel) {
-  document.getElementById("Awake_Title").textContent = beforeDuel ? "듀얼 시작 전 각성 레벨 설정" : "각성 레벨";
+  document.getElementById("Awake_Title").textContent = beforeDuel ? "대전 시작 전 각성 레벨 설정" : "각성 레벨";
   document.getElementById("Awake_Desc").textContent = beforeDuel
     ? "두 플레이어 리더의 각성 레벨을 먼저 맞춰 주세요."
     : "리더 카드마다 각성 레벨이 달라요. 이 레벨에 도달하면 각성 표시가 켜져요.";
-  document.getElementById("Awake_Ok").textContent = beforeDuel ? "듀얼 시작" : "닫기";
+  document.getElementById("Awake_Ok").textContent = beforeDuel ? "대전 시작" : "닫기";
   Show_Modal("Modal_Awake", true);
 }
 document.getElementById("Home_Deck").addEventListener("click", () => { Show_Home(false); Show_Deck(true); });
