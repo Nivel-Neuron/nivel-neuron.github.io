@@ -684,7 +684,7 @@
     <div class="Home_Menu">
       <button class="Home_Card" id="Home_Duel">
         <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10 44 44M44 44l8 2-2-8M54 10 20 44M20 44l-8 2 2-8M14 50l6-6M50 50l-6-6"/></svg></div>
-        <div class="Home_Name">대전</div>
+        <div class="Home_Name">듀얼</div>
         <div class="Home_Desc">레벨 · 대미지 · 사이즈 계산</div>
       </button>
       <button class="Home_Card" id="Home_Deck">
@@ -1208,7 +1208,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261126-1555";
+const APP_VERSION = "20261126-1615";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1250,7 +1250,6 @@ const ANNOUNCE = [
         "누르면 그 종류 카드만 원래 색으로 보이고, 나머지는 흐린 회색이 돼요",
         "한 번 더 누르면 원래대로 돌아와요"]]]},
     { h: "기타", items: [
-      ["'듀얼'을 공식 용어인 **대전**으로 바꿨어요", []],
       ["홈 화면 아래에 비공식 팬 제작 앱 안내와 자료 출처를 넣었어요", []]]}]},
   { date: "2026. 11. 25", title: "업데이트 내역", secs: [
     { h: "카드 상세 정보", items: [
