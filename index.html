@@ -118,7 +118,7 @@
   #A_Date { text-align: center; font-size: 17px; font-weight: 800; color: var(--neon); margin-bottom: 14px; }
   #A_List { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 6px 4px 2px; }
   .A_Sec { margin-bottom: 14px; }
-  .A_Foot { margin-top: 4px; padding-top: 10px; border-top: 1px solid rgba(79,227,255,.35); text-align: center; font-size: 16px; font-weight: 700; color: #cfe3ff; }
+  .A_Foot { line-height: 1.7; margin-top: 4px; padding-top: 10px; border-top: 1px solid rgba(79,227,255,.35); text-align: center; font-size: 16px; font-weight: 700; color: #cfe3ff; }
   .A_Sec h3 { margin: 0 0 8px; padding: 6px 14px; font-size: 20px; font-weight: 900; background: linear-gradient(90deg, rgba(29,111,232,.7), rgba(8,36,110,0)); border-left: 4px solid var(--neon); }
   .A_Sec ul { margin: 0; padding: 0 0 0 4px; list-style: none; }
   .A_Sec li { position: relative; padding-left: 22px; font-size: 18px; font-weight: 700; line-height: 1.55; margin: 3px 0; }
@@ -438,6 +438,25 @@
     color: var(--text); font-family: inherit; font-size: 26px; font-weight: 900; font-style: italic; text-align: left; text-shadow: 0 0 12px rgba(79,227,255,.45); }
   #D_NameTxt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-right: 8px; }   /* 기울임 글자 끝이 연필에 닿지 않게 */
   #D_NameTxt.Auto { color: #cfe3ff; }
+  #D_CodeBtn { height: 60px; width: 170px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 22px; font-weight: 900; color: var(--text);
+    background: linear-gradient(180deg, rgba(29,111,232,.55), rgba(8,36,110,.85)); border: 2px solid var(--neon); box-shadow: 0 0 12px rgba(79,227,255,.35); font-family: inherit; }
+  #D_CodeBtn:active { filter: brightness(1.4); }
+  #D_Save { flex-shrink: 0; white-space: nowrap; }
+  .DK_Box { width: 600px; padding: 26px 30px 24px; background: linear-gradient(180deg, #0c2a78, #061a52); border: 2px solid var(--neon); box-shadow: 0 0 24px rgba(79,227,255,.45);
+    clip-path: polygon(4% 0, 96% 0, 100% 6%, 100% 94%, 96% 100%, 4% 100%, 0 94%, 0 6%); color: var(--text); }
+  .DK_Box h2 { margin: 0 0 6px; text-align: center; font-size: 30px; font-style: italic; font-weight: 900; text-shadow: 0 0 12px rgba(79,227,255,.7); }
+  .DK_Sub { text-align: center; color: var(--sub); font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+  .DK_Big { display: flex; align-items: center; gap: 16px; width: 100%; height: 84px; margin: 0 0 12px; padding: 0 24px; font-family: inherit; color: var(--text); font-size: 25px; font-weight: 900;
+    background: rgba(2,14,50,.8); border: 2px solid rgba(79,227,255,.6); text-align: left; }
+  .DK_Big small { display: block; font-size: 14px; color: var(--sub); font-weight: 700; margin-top: 3px; }
+  .DK_Big.Pri, .DK_Btn.Pri { background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border-color: var(--neon); }
+  .DK_Big:active, .DK_Btn:active { filter: brightness(1.3); }
+  .DK_Row { display: flex; justify-content: center; gap: 14px; margin-top: 8px; }
+  .DK_Btn { height: 56px; min-width: 170px; font-family: inherit; font-size: 22px; font-weight: 900; color: var(--text); background: rgba(2,14,50,.85); border: 2px solid rgba(79,227,255,.6); }
+  .DK_Ta { display: block; width: 100%; height: 76px; box-sizing: border-box; padding: 22px 10px; font-family: inherit; font-size: 19px; font-weight: 800; letter-spacing: .5px; text-align: center;
+    color: var(--text); background: rgba(0,8,30,.85); border: 2px solid rgba(79,227,255,.6); resize: none; outline: none; overflow: hidden; white-space: nowrap; }
+  .DK_Ta:focus { border-color: var(--neon); }
+  .DK_Note { font-size: 14.5px; color: #ffd54f; font-weight: 700; margin: 10px 0 4px; text-align: center; }
   #D_NameBtn i { flex-shrink: 0; font-style: normal; font-size: 20px; color: var(--neon); opacity: .85; }
   #D_NameBtn:active { filter: brightness(1.4); }
   #D_NameIn { width: 100%; font-family: inherit; font-size: 22px; font-weight: 800; color: var(--text); background: rgba(2,14,50,.8); border: 2px solid var(--neon); padding: 10px 14px; outline: none; }
@@ -717,6 +736,7 @@
     <div class="D_Top">
       <button class="Util_Btn Top_Util" id="D_Home"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button>
       <button id="D_NameBtn"><span id="D_NameTxt">새 덱</span><i>✎</i></button>
+      <button id="D_CodeBtn"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7 3 12l5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>덱 코드</button>
       <div class="D_Counts">
         <div class="D_Pill" id="D_CntDeck">덱<b>0</b>/ 40</div>
         <div class="D_Pill" id="D_CntTrig">트리거<b>0</b>/ 8</div>
@@ -778,6 +798,20 @@
     </div>
 
     <!-- 확인창 -->
+    <div class="D_Layer" id="DK_Menu">
+      <div class="DK_Box"><h2>덱 코드</h2><div class="DK_Sub">덱을 글자 코드로 주고받아요 (니벨 뉴런 전용)</div>
+        <button class="DK_Big Pri" id="DK_Copy">📋<span>덱 코드 복사<small>지금 덱을 코드로 바꿔서 복사해요 · 카톡 등에 붙여넣기</small></span></button>
+        <button class="DK_Big" id="DK_Load">📥<span>덱 코드 불러오기<small>받은 코드를 붙여넣어서 덱을 만들어요</small></span></button>
+        <div class="DK_Row"><button class="DK_Btn" id="DK_Close">닫기</button></div>
+      </div>
+    </div>
+    <div class="D_Layer" id="DK_In">
+      <div class="DK_Box"><h2>덱 코드 불러오기</h2><div class="DK_Sub">받은 덱 코드를 아래 칸에 붙여넣어 주세요</div>
+        <textarea id="DK_Ta" class="DK_Ta" rows="1" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 붙여넣기"></textarea>
+        <div class="DK_Note">⚠ 불러오면 지금 화면의 덱이 바뀌어요 (저장한 덱은 그대로)</div>
+        <div class="DK_Row"><button class="DK_Btn" id="DK_No">취소</button><button class="DK_Btn Pri" id="DK_Ok">불러오기</button></div>
+      </div>
+    </div>
     <div class="D_Layer" id="D_NameLayer">
       <div class="D_Box">
         <h2>덱 이름</h2>
@@ -1209,7 +1243,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261126-1625";
+const APP_VERSION = "20261126-1645";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1244,7 +1278,7 @@ document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(tr
 // 새 업데이트는 맨 앞에 추가. 지금은 가장 최근 것 하나만 보여줌.
 // 글 안의 **굵게** 는 노란 글씨, [ ... ] 배열은 아래 단계 목록
 const ANNOUNCE = [
-  { date: "2026. 11. 25", title: "업데이트 내역", foot: "26일 추가 패치. '덱 만들기' 화면에 필터링 추가", secs: [
+  { date: "2026. 11. 25", title: "업데이트 내역", foot: ["26일 추가 패치. '덱 만들기' 화면에 필터링 추가", "26일 추가 패치. '덱 만들기' 화면에 덱 코드 기능 추가 (덱 코드 복사 · 불러오기)"], secs: [
     { h: "카드 상세 정보", items: [
       ["덱 만들기 · 카드 추가 화면에서 카드를 누르면 **카드 상세 정보** 창이 열려요", [
         "카드 이미지, 속성 · 종류 · 트리거 · 코스트 · 파워 · 히트 · IP",
@@ -1279,7 +1313,7 @@ function Show_Announce() {
   document.getElementById("A_List").innerHTML = a.secs.map(sec =>
     `<div class="A_Sec"><h3>${Esc(sec.h)}</h3><ul>${sec.items.map(([t, sub]) =>
       `<li>${A_Line(t)}${sub && sub.length ? `<ul>${sub.map(x => `<li>${A_Line(x)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul></div>`).join("")
-    + (a.foot ? `<div class="A_Foot">${A_Line(a.foot)}</div>` : "");
+    + (a.foot ? `<div class="A_Foot">${[].concat(a.foot).map(A_Line).join("<br>")}</div>` : "");
   document.getElementById("A_List").scrollTop = 0;
   document.getElementById("A_Dim").classList.add("Show");
 }
@@ -2728,6 +2762,90 @@ function Apply_Name() {
 document.getElementById("DN_Ok").addEventListener("click", Apply_Name);
 document.getElementById("DN_No").addEventListener("click", Close_Name);
 document.getElementById("D_NameIn").addEventListener("keydown", (e) => { if (e.key === "Enter") Apply_Name(); if (e.key === "Escape") Close_Name(); });
+// ---------- 덱 코드 (복사 / 불러오기) ----------
+// 리더 + 카드 번호 + 장수를 비트로 압축 → base64url 한 줄 (서버 없이 앱 안에서만 처리)
+// 구성: 버전4 | 리더있음1 [리더: 팩] | 팩 수5 | 팩마다 [팩, 종류 수6, (번호8, 장수2)×] | 검사값8
+// 팩 = 앞글자 종류3 (BT/ST/SB/PR) + 팩 번호7
+const DK_PRE = ["BT", "ST", "SB", "PR"];
+function DK_Encode(d) {
+  let bits = "";
+  const put = (v, n) => { bits += (v >>> 0).toString(2).padStart(n, "0").slice(-n); };
+  const split = id => { const m = /^([A-Z]+)(\d+)-(\d+)$/.exec(id); return m && DK_PRE.includes(m[1]) ? [DK_PRE.indexOf(m[1]), +m[2], +m[3]] : null; };
+  put(1, 4);
+  const L = d.leader && split(d.leader);
+  put(L ? 1 : 0, 1);
+  if (L) { put(L[0], 3); put(L[1], 7); put(L[2], 8); }
+  const g = new Map();
+  for (const id in d.cards) {
+    const n = d.cards[id], c = split(id); if (!n || !c) continue;
+    const k = c[0] + "-" + c[1]; if (!g.has(k)) g.set(k, { p: c[0], s: c[1], l: [] });
+    g.get(k).l.push([c[2], Math.min(n, 3)]);
+  }
+  put(g.size, 5);
+  for (const v of g.values()) { put(v.p, 3); put(v.s, 7); put(v.l.length, 6); v.l.sort((a, b) => a[0] - b[0]).forEach(([no, n]) => { put(no, 8); put(n, 2); }); }
+  bits += "0".repeat((8 - bits.length % 8) % 8);
+  const bytes = []; for (let i = 0; i < bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  bytes.push(bytes.reduce((a, b) => (a * 31 + b) & 255, 7));
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function DK_Decode(code) {
+  try {
+    code = String(code).replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+    // 카톡 등에서 앞뒤에 글자가 붙어도 가장 긴 코드 덩어리만 사용
+    const m = code.match(/[A-Za-z0-9+/]{8,}/g); if (!m) return null;
+    code = m.sort((a, b) => b.length - a.length)[0];
+    const raw = atob(code + "=".repeat((4 - code.length % 4) % 4));
+    const bytes = [...raw].map(ch => ch.charCodeAt(0)); if (bytes.length < 3) return null;
+    const chk = bytes.pop();
+    if (bytes.reduce((a, b) => (a * 31 + b) & 255, 7) !== chk) return null;
+    const bits = bytes.map(b => b.toString(2).padStart(8, "0")).join("");
+    let pos = 0;
+    const get = n => { if (pos + n > bits.length) throw 0; const v = parseInt(bits.slice(pos, pos + n), 2); pos += n; return v; };
+    const id = (p, s, no) => DK_PRE[p] + String(s).padStart(2, "0") + "-" + String(no).padStart(3, "0");
+    if (get(4) !== 1) return null;
+    const out = { leader: null, cards: {}, missing: 0 };
+    if (get(1)) { const p = get(3), s = get(7), no = get(8); const lid = id(p, s, no); if (CARD_BY_ID[lid]) out.leader = lid; else out.missing++; }
+    const gs = get(5);
+    for (let i = 0; i < gs; i++) {
+      const p = get(3), s = get(7), k = get(6);
+      for (let j = 0; j < k; j++) { const no = get(8), n = get(2); const cid = id(p, s, no); if (CARD_BY_ID[cid] && n) out.cards[cid] = n; else out.missing++; }
+    }
+    return out;
+  } catch (e) { return null; }
+}
+async function DK_Clip(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (err) {
+    const t = document.createElement("textarea"); t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {}
+    t.remove(); return ok;
+  }
+}
+const DK_Show = (id, on) => document.getElementById(id).classList.toggle("Show", on);
+document.getElementById("D_CodeBtn").addEventListener("click", () => DK_Show("DK_Menu", true));
+document.getElementById("DK_Close").addEventListener("click", () => DK_Show("DK_Menu", false));
+document.getElementById("DK_Copy").addEventListener("click", async () => {
+  if (!deck.leader && !Deck_Total()) { Show_Toast("덱이 비어 있어요"); return; }
+  const code = DK_Encode(deck);
+  DK_Show("DK_Menu", false);
+  Show_Toast(await DK_Clip(code) ? "✓ 덱 코드를 복사했어요" : "복사하지 못했어요: " + code);
+});
+document.getElementById("DK_Load").addEventListener("click", () => {
+  DK_Show("DK_Menu", false);
+  const ta = document.getElementById("DK_Ta"); ta.value = "";
+  DK_Show("DK_In", true); setTimeout(() => ta.focus(), 50);
+});
+document.getElementById("DK_No").addEventListener("click", () => DK_Show("DK_In", false));
+document.getElementById("DK_Ta").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("DK_Ok").click(); } });
+document.getElementById("DK_Ok").addEventListener("click", () => {
+  const r = DK_Decode(document.getElementById("DK_Ta").value);
+  if (!r || (!r.leader && !Object.keys(r.cards).length)) { Show_Toast("올바른 덱 코드가 아니에요"); return; }
+  deck = New_Deck(); deck.leader = r.leader; deck.cards = r.cards;
+  DK_Show("DK_In", false); D_TY = null; Deck_Changed();
+  Show_Toast(r.missing ? `덱을 불러왔어요 · 찾을 수 없는 카드 ${r.missing}종 제외` : "✓ 덱을 불러왔어요");
+});
+
 let D_TY = null;   // 덱 화면에서 강조할 카드 종류 (null이면 전체)
 document.addEventListener("click", (e) => {
   const b = e.target.closest(".D_TyBtn"); if (!b) return;
