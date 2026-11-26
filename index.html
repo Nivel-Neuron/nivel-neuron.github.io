@@ -352,6 +352,12 @@
   }
   .D_TrigLab { display: inline-block; border: 2px solid var(--text); padding: 1px 12px; font-weight: 900; font-size: 16px; margin-bottom: 6px; clip-path: polygon(0 0, 88% 0, 100% 40%, 100% 100%, 0 100%); }
   .D_TrigLab small { font-size: 14px; color: var(--warn); margin-left: 6px; }
+  .D_TrigHead { display: flex; gap: 8px; align-items: flex-start; }
+  .D_TyBtn { background: rgba(2,14,50,.6); color: var(--text); font-family: inherit; cursor: pointer; }
+  .D_TyBtn small { color: var(--sub); }
+  .D_TyBtn.On { background: var(--neon); color: #041a4a; border-color: var(--neon); box-shadow: 0 0 10px rgba(79,227,255,.6); }
+  .D_TyBtn.On small { color: #041a4a; }
+  #D_TrigRow .NC.Dim, #D_MainGrid .NC.Dim { filter: grayscale(1) brightness(.45); opacity: .7; }
   #D_TrigRow { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; height: 118px; }
   .D_MainHead { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
   #D_MainGrid { flex: 1; min-height: 0; margin-top: 6px; display: grid; grid-template-columns: repeat(11, 1fr); grid-auto-rows: 1fr; gap: 7px; }
@@ -724,7 +730,12 @@
       </div>
       <div class="D_TrigWrap">
         <div class="D_Trig">
-          <div class="D_TrigLab">트리거<small id="D_TrigSmall">0 / 8</small></div>
+          <div class="D_TrigHead">
+            <div class="D_TrigLab">트리거<small id="D_TrigSmall">0 / 8</small></div>
+            <button class="D_TrigLab D_TyBtn" data-ty="유">유닛<small>0</small></button>
+            <button class="D_TrigLab D_TyBtn" data-ty="스">스킬<small>0</small></button>
+            <button class="D_TrigLab D_TyBtn" data-ty="아">아이템<small>0</small></button>
+          </div>
           <div id="D_TrigRow"></div>
         </div>
       </div>
@@ -1197,7 +1208,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261125-1915";
+const APP_VERSION = "20261126-1555";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1232,6 +1243,15 @@ document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(tr
 // 새 업데이트는 맨 앞에 추가. 지금은 가장 최근 것 하나만 보여줌.
 // 글 안의 **굵게** 는 노란 글씨, [ ... ] 배열은 아래 단계 목록
 const ANNOUNCE = [
+  { date: "2026. 11. 26", title: "업데이트 내역", secs: [
+    { h: "덱 만들기", items: [
+      ["트리거 옆에 **유닛 · 스킬 · 아이템** 버튼이 생겼어요", [
+        "버튼마다 덱에 들어간 장수가 표시돼요",
+        "누르면 그 종류 카드만 원래 색으로 보이고, 나머지는 흐린 회색이 돼요",
+        "한 번 더 누르면 원래대로 돌아와요"]]]},
+    { h: "기타", items: [
+      ["'듀얼'을 공식 용어인 **대전**으로 바꿨어요", []],
+      ["홈 화면 아래에 비공식 팬 제작 앱 안내와 자료 출처를 넣었어요", []]]}]},
   { date: "2026. 11. 25", title: "업데이트 내역", secs: [
     { h: "카드 상세 정보", items: [
       ["덱 만들기 · 카드 추가 화면에서 카드를 누르면 **카드 상세 정보** 창이 열려요", [
@@ -2671,6 +2691,7 @@ function Tile(card, opt = {}) {
   if (opt.off) cls.push("Off");
   if (opt.lead) cls.push("Lead");
   if (opt.bad) cls.push("Bad");
+  if (opt.dim) cls.push("Dim");
   const cost = card.ty === "리" ? (card.aw ? "Lv" + card.aw : "L") : (card.c ?? "");
   const pw = card.p != null ? `<span class="Pw">${card.p}</span>` : (card.ty === "리" ? `<span class="Pw">리더</span>` : "");
   const tr = card.tr ? `<span class="Tr">트리거</span>` : "";
@@ -2714,6 +2735,12 @@ function Apply_Name() {
 document.getElementById("DN_Ok").addEventListener("click", Apply_Name);
 document.getElementById("DN_No").addEventListener("click", Close_Name);
 document.getElementById("D_NameIn").addEventListener("keydown", (e) => { if (e.key === "Enter") Apply_Name(); if (e.key === "Escape") Close_Name(); });
+let D_TY = null;   // 덱 화면에서 강조할 카드 종류 (null이면 전체)
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".D_TyBtn"); if (!b) return;
+  D_TY = D_TY === b.dataset.ty ? null : b.dataset.ty;
+  Render_Deck();
+});
 function Render_Deck() {
   Render_Deck_Name();
   const total = Deck_Total(), trig = Deck_Trig(), L = Leader();
@@ -2734,14 +2761,19 @@ function Render_Deck() {
 
   const trigCards = Sorted_Expanded(c => c.tr);
   document.getElementById("D_TrigSmall").textContent = `${trig} / ${MAX_TRIG}`;
-  let th = trigCards.slice(0, 12).map(c => Tile(c, { bad: badSet.has(c.id) })).join("");
+  // 종류 버튼 (유닛·스킬·아이템): 누른 종류만 원래 색, 나머지는 흐린 회색
+  const tyCnt = { "유": 0, "스": 0, "아": 0 };
+  for (const id in deck.cards) { const c = CARD_BY_ID[id]; if (c && tyCnt[c.ty] != null) tyCnt[c.ty] += deck.cards[id]; }
+  document.querySelectorAll(".D_TyBtn").forEach(b => { b.querySelector("small").textContent = tyCnt[b.dataset.ty]; b.classList.toggle("On", D_TY === b.dataset.ty); });
+  const dimOf = c => !!D_TY && c.ty !== D_TY;
+  let th = trigCards.slice(0, 12).map(c => Tile(c, { bad: badSet.has(c.id), dim: dimOf(c) })).join("");
   for (let i = trigCards.length; i < MAX_TRIG; i++) th += EMPTY_TILE;
   document.getElementById("D_TrigRow").innerHTML = th;
 
   const mainCards = Sorted_Expanded(c => !c.tr);
   const cap = Math.max(DECK_SIZE - Math.min(trig, MAX_TRIG), mainCards.length);
   document.getElementById("D_MainLab").textContent = `MAIN · ${mainCards.length}장`;
-  let mh = mainCards.map(c => Tile(c, { bad: badSet.has(c.id) })).join("");
+  let mh = mainCards.map(c => Tile(c, { bad: badSet.has(c.id), dim: dimOf(c) })).join("");
   for (let i = mainCards.length; i < cap; i++) mh += EMPTY_TILE;
   const grid = document.getElementById("D_MainGrid");
   grid.innerHTML = mh;
