@@ -118,6 +118,7 @@
   #A_Date { text-align: center; font-size: 17px; font-weight: 800; color: var(--neon); margin-bottom: 14px; }
   #A_List { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 6px 4px 2px; }
   .A_Sec { margin-bottom: 14px; }
+  .A_Foot { margin-top: 4px; padding-top: 10px; border-top: 1px solid rgba(79,227,255,.35); text-align: center; font-size: 16px; font-weight: 700; color: #cfe3ff; }
   .A_Sec h3 { margin: 0 0 8px; padding: 6px 14px; font-size: 20px; font-weight: 900; background: linear-gradient(90deg, rgba(29,111,232,.7), rgba(8,36,110,0)); border-left: 4px solid var(--neon); }
   .A_Sec ul { margin: 0; padding: 0 0 0 4px; list-style: none; }
   .A_Sec li { position: relative; padding-left: 22px; font-size: 18px; font-weight: 700; line-height: 1.55; margin: 3px 0; }
@@ -1208,7 +1209,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261126-1615";
+const APP_VERSION = "20261126-1620";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1243,7 +1244,7 @@ document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(tr
 // 새 업데이트는 맨 앞에 추가. 지금은 가장 최근 것 하나만 보여줌.
 // 글 안의 **굵게** 는 노란 글씨, [ ... ] 배열은 아래 단계 목록
 const ANNOUNCE = [
-  { date: "2026. 11. 26", title: "업데이트 내역", secs: [
+  { date: "2026. 11. 26", title: "업데이트 내역", foot: "26일 추가 패치. '덱 만들기' 화면에 필터링 추가", secs: [
     { h: "덱 만들기", items: [
       ["트리거 옆에 **유닛 · 스킬 · 아이템** 버튼이 생겼어요", [
         "버튼마다 덱에 들어간 장수가 표시돼요",
@@ -1285,7 +1286,8 @@ function Show_Announce() {
   document.getElementById("A_Date").textContent = `${a.date} ${a.title}`;
   document.getElementById("A_List").innerHTML = a.secs.map(sec =>
     `<div class="A_Sec"><h3>${Esc(sec.h)}</h3><ul>${sec.items.map(([t, sub]) =>
-      `<li>${A_Line(t)}${sub && sub.length ? `<ul>${sub.map(x => `<li>${A_Line(x)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul></div>`).join("");
+      `<li>${A_Line(t)}${sub && sub.length ? `<ul>${sub.map(x => `<li>${A_Line(x)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul></div>`).join("")
+    + (a.foot ? `<div class="A_Foot">${A_Line(a.foot)}</div>` : "");
   document.getElementById("A_List").scrollTop = 0;
   document.getElementById("A_Dim").classList.add("Show");
 }
