@@ -345,7 +345,7 @@ jobs:
           OUT = "cards/qna.json"
           SLEEP = 1.0                     # 요청 간격(초) - 사이트에 부담 안 주게 천천히
           MAX_PAGES = 80                  # 안전장치
-          UA = "NivelNeuronBot/1.0 (+https://nivel-neuron.github.io; fan-made deck helper)"
+          UA = "Mozilla/5.0 (NivelNeuron qna sync)"   # 카드 자동 업데이트와 같은 형식 (니벨 뉴런임을 밝힘)
           ID_RE = re.compile(r"\b([A-Z]{2}\d{2}-\d{3})\b")
 
           log_lines = []
