@@ -371,6 +371,8 @@ jobs:
               h = re.sub(r"(?is)<\s*/?\s*(?:strong|b)\s*>", "**", h)
               h = re.sub(r"(?is)<\s*/?\s*" + HTML_TAGS + r"\b[^<>]*>", "", h)
               t = html.unescape(h).replace("\xa0", " ")
+              t = re.sub(r"(?i)</\s*ex\s*>", "", t)                 # 공식 글에 섞인 </ex> 정리
+              t = re.sub(r"<ex(?=[:\s>])", "<EX", t)                  # <ex> → <EX>
               t = re.sub(r"\*\*\s*\*\*", "", t)
               lines = [re.sub(r"[ \t]+", " ", x).strip() for x in t.split("\n")]
               return "\n".join(x for x in lines if x)
@@ -396,6 +398,8 @@ jobs:
                   if md:
                       d = f"{md.group(1)}.{int(md.group(2)):02d}.{int(md.group(3)):02d}"
                       q = q[:md.start()].rstrip()
+                  else:
+                      q = re.sub(r"\s*\(\d{4}[.\d]*$", "", q)   # 잘린 날짜 꼬리 정리
                   a = to_text(ma.group(1))
                   ids = []
                   for x in ID_RE.findall(q + "\n" + a):
